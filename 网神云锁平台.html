@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jowtolock 奇安信·网神·云锁 8.0.5</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%230B2A4A'/%3E%3Cpath d='M9 20c2 2 5 2 7 0s5-2 7 0M10 14c1.5-3 4-4 6-4s4.5 1 6 4' stroke='%2322D3C5' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js" onerror="this.onerror=null;var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js';document.head.appendChild(s);"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:"Microsoft YaHei","PingFang SC","Helvetica Neue",Arial,sans-serif;font-size:13px;color:#333;background:#f0f2f5;overflow:hidden}
+.mono{font-family:Consolas,Menlo,"Courier New",monospace}
+a{text-decoration:none;color:inherit}
+button{font-family:inherit;cursor:pointer;outline:none}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#cfd8e0;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ===== 顶栏 ===== */
+#topbar{height:42px;background:linear-gradient(90deg,#0C97E8 0%,#0A86D6 100%);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex:none;z-index:20}
+#topbar .tb-left{display:flex;align-items:center;gap:8px;font-size:13px}
+#topbar .tb-right{display:flex;align-items:center;gap:22px;font-size:13px}
+#topbar .tb-item{display:flex;align-items:center;gap:6px;cursor:pointer;opacity:.95}
+#topbar .tb-item:hover{opacity:1}
+.avatar{width:22px;height:22px;border-radius:50%;background:#fff;color:#0C95E7;display:inline-flex;align-items:center;justify-content:center}
+.tb-ic{height:16px;width:auto;min-width:14px;object-fit:contain;vertical-align:-3px}
+.avatar .tb-ic{height:14px;width:auto;min-width:12px}
+
+/* ===== 主体布局 ===== */
+#body{display:flex;height:100vh;overflow:hidden}
+#side{width:200px;background:#fff;flex:none;display:flex;flex-direction:column;box-shadow:2px 0 6px rgba(0,0,0,.04);z-index:10}
+#right{flex:1;display:flex;flex-direction:column;min-width:0;height:100vh}
+#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+/* ===== Logo 区 ===== */
+.brand{padding:14px 0 10px;text-align:center;border-bottom:1px solid #f0f2f5}
+.brand .logo{width:64px;height:64px;margin:0 auto 6px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#123f6e,#081f3a);box-shadow:0 0 0 2px #22D3C5 inset,0 2px 8px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center}
+.brand h1{font-size:20px;font-weight:700;color:#222;letter-spacing:.5px;line-height:1.2}
+.brand p{font-size:12px;color:#8a94a6;margin-top:2px}
+
+/* ===== 侧栏菜单 ===== */
+#menu{flex:1;overflow-y:auto;padding:8px 0}
+.m1{display:flex;align-items:center;gap:8px;padding:11px 14px;cursor:pointer;color:#333;font-size:14px;user-select:none}
+.m1:hover{background:#f5f9fc}
+.m1 .arrow{margin-left:auto;font-size:10px;color:#9aa5b1;transition:transform .15s}
+.m1.open .arrow{transform:rotate(90deg)}
+.m1-ic{height:14px;width:auto;min-width:12px;flex:none;object-fit:contain}
+.m2{display:flex;align-items:center;gap:7px;padding:9px 14px 9px 38px;cursor:pointer;color:#666;font-size:13px;position:relative;white-space:nowrap}
+.m2 .m2-ic{height:15px;width:auto;min-width:13px;flex:none;object-fit:contain}
+.m2:hover{color:#1296DB}
+.m2.active{background:#E8F6FE;color:#1296DB;font-weight:600}
+.m2.active::after{content:"→";position:absolute;right:10px;color:#1296DB;border-right:2px dashed #1296DB;padding-right:6px;font-size:12px}
+#sidever{padding:8px 0;text-align:center;color:#9aa5b1;font-size:12px;border-top:1px solid #f0f2f5;flex:none}
+
+/* ===== 面包屑 ===== */
+#crumbbar{height:44px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 18px;flex:none;border-bottom:1px solid #eef1f4}
+#crumb{display:flex;align-items:center;gap:8px;color:#8a94a6;font-size:13px}
+#crumb .home{width:20px;height:20px;background:linear-gradient(135deg,#0C97E8,#0A86D6);border-radius:3px;display:inline-flex;align-items:center;justify-content:center}
+#crumb .cur{color:#333}
+#crumb .sep{color:#c3ccd6}
+.func-note{color:#1296DB;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px}
+
+/* ===== 内容区 ===== */
+#view{flex:1;overflow-y:auto;padding:14px 16px 20px}
+.panel{background:#fff;border-radius:6px;box-shadow:0 1px 3px rgba(30,60,90,.06)}
+
+/* 搜索大框 */
+.bigsearch{display:flex;justify-content:center;padding:26px 0 8px}
+.bigsearch .box{width:62%;position:relative}
+.bigsearch input{width:100%;height:40px;border:2px solid #0C95E7;border-radius:22px;padding:0 70px 0 18px;font-size:13px;outline:none}
+.bigsearch .icons{position:absolute;right:14px;top:50%;transform:translateY(-50%);display:flex;gap:14px;color:#7d8b9c;cursor:pointer}
+.bigsearch .icons img{height:22px;width:auto;min-width:18px;object-fit:contain;display:block}
+.search-links{display:flex;justify-content:flex-end;gap:16px;padding:6px 38% 0 0;font-size:13px}
+.search-links .g{color:#9aa5b1;cursor:pointer}
+.search-links .b{color:#1296DB;cursor:pointer;display:flex;align-items:center;gap:4px}
+
+/* 按钮 */
+.btn{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 16px;border:1px solid #d9dee5;background:#fff;border-radius:4px;color:#555;font-size:13px;cursor:pointer}
+.btn:hover{border-color:#0C95E7;color:#0C95E7}
+.btn-p{background:#0C95E7;border-color:#0C95E7;color:#fff}
+.btn-p:hover{background:#0a86d6;color:#fff}
+.btn-g{background:#f2f4f7;border-color:#e6eaf0;color:#a8b3c0;cursor:not-allowed}
+.btn-sm{height:26px;padding:0 10px;font-size:12px}
+
+/* 工具条 */
+.toolbar{display:flex;align-items:center;gap:10px;padding:12px 16px;flex-wrap:wrap}
+.toolbar .sp{flex:1}
+.kw{width:230px;height:32px;flex:none;border:1px solid #d9dee5;border-radius:4px;display:flex;align-items:center;padding:0 10px;color:#9aa5b1;font-size:13px;gap:8px;cursor:text;white-space:nowrap}
+.kw input{border:none;outline:none;flex:1;min-width:0;font-size:13px}
+
+/* Tabs（块式） */
+.tabs{display:flex;gap:6px;padding:12px 16px 0;background:#fff;border-radius:6px 6px 0 0}
+.tab{display:flex;align-items:center;gap:6px;padding:9px 20px;cursor:pointer;color:#666;font-size:13px;border-radius:4px 4px 0 0;white-space:nowrap}
+.tab.active{background:#E6F5FD;color:#1296DB;font-weight:600}
+.tab-ic{height:16px;width:auto;min-width:14px;object-fit:contain;flex:none}
+.tab.active .tab-ic{filter:none}
+/* Tabs（下划线式） */
+.utabs{display:flex;gap:28px;padding:14px 16px 0}
+.utab{padding:8px 2px;cursor:pointer;color:#666;font-size:14px;border-bottom:2px solid transparent;margin-bottom:-1px}
+.utab.active{color:#1296DB;border-bottom-color:#1296DB;font-weight:600}
+
+/* 表格 */
+.tbl-wrap{padding:0 16px 8px}
+table.grid{width:100%;border-collapse:collapse;table-layout:fixed}
+.grid th{background:#F5F6F8;color:#5a6572;font-weight:600;text-align:left;padding:10px 8px;border-bottom:1px solid #e8edf2;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grid td{padding:10px 8px;border-bottom:1px solid #f0f3f6;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
+.grid tbody tr{background:#fff}
+.grid tbody tr:nth-child(even){background:#fafbfd}
+.grid tbody tr:hover{background:#F5FAFE}
+.sort{color:#b6c0cb;font-size:10px}
+.link{color:#1296DB;cursor:pointer}
+.link:hover{text-decoration:underline}
+.op-links{display:flex;gap:10px;align-items:center}
+.chk{width:15px;height:15px;accent-color:#0C95E7;cursor:pointer}
+
+/* 标签 */
+.tag{display:inline-block;padding:2px 10px;border-radius:3px;font-size:12px;line-height:18px;border:1px solid}
+.tag-high{color:#F8A83D;border-color:#F8A83D;background:#FDF6EC}
+.tag-crit{color:#F0483E;border-color:#F0483E;background:#FDEDEA}
+.tag-mid{color:#E6A23C;border-color:#E6A23C;background:#FDF6EC}
+.tag-low{color:#0C95E7;border-color:#0C95E7;background:#EBF6FE}
+.online{color:#15B26B}
+.offline{color:#F0483E}
+.ispill{display:inline-block;background:#FDEDEA;color:#F0483E;font-size:11px;border-radius:2px;padding:0 4px;margin-left:4px;line-height:16px}
+
+/* 分页 */
+.pager{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 16px;color:#666;font-size:13px;flex-wrap:wrap}
+.pager select{height:28px;border:1px solid #d9dee5;border-radius:4px;color:#555}
+.pg{min-width:28px;height:28px;padding:0 6px;border:1px solid #dfe4ea;background:#fff;border-radius:4px;cursor:pointer;color:#555}
+.pg:hover{border-color:#0C95E7;color:#0C95E7}
+.pg.on{background:#0C95E7;border-color:#0C95E7;color:#fff}
+.pg.dis{background:#f2f4f7;color:#b6c0cb;cursor:not-allowed}
+.goto{display:flex;align-items:center;gap:6px}
+.goto input{width:44px;height:28px;border:1px solid #d9dee5;border-radius:4px;text-align:center;outline:none}
+
+/* 空态 */
+.empty{padding:70px 0;text-align:center;color:#9aa5b1}
+.empty .ico{margin:0 auto 14px;width:90px;height:90px;opacity:.8}
+
+/* 资产卡片 */
+.asset-cards{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;padding:6px 16px 20px}
+.acard{border:1px solid #e8edf2;border-radius:6px;padding:16px;cursor:pointer;background:#fff;transition:all .15s}
+.acard:hover{border-color:#0C95E7;box-shadow:0 2px 10px rgba(12,149,231,.15)}
+.acard .t{display:flex;align-items:center;gap:7px;color:#555;font-size:13px;margin-bottom:10px}
+.acard .v{font-size:24px;font-weight:700;color:#222;font-family:Consolas,monospace}
+.acard .s{color:#9aa5b1;font-size:12px;margin-top:6px}
+.sec-title{display:flex;align-items:center;gap:10px;padding:14px 16px 4px;font-size:14px;color:#333;font-weight:600}
+.sec-title::before{content:"";width:4px;height:16px;background:#0C95E7;border-radius:2px}
+
+/* 统计色块（威胁总览） */
+.stat-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.statbox{border-radius:6px;padding:16px;display:flex;align-items:center;gap:12px}
+.statbox .n{font-size:26px;font-weight:700}
+.statbox .u{font-size:13px}
+.sc-crit{background:#FDECEA}.sc-crit .n,.sc-crit .u{color:#F0483E}
+.sc-high{background:#FDF3E4}.sc-high .n,.sc-high .u{color:#F08A24}
+.sc-mid{background:#FCF6E0}.sc-mid .n,.sc-mid .u{color:#E6A23C}
+.sc-low{background:#E8F4FD}.sc-low .n,.sc-low .u{color:#0C95E7}
+
+/* 图表卡 */
+.chart-row{display:grid;grid-template-columns:1fr 1.1fr 1.2fr;gap:14px;padding:14px 16px}
+.chart-card{background:#fff;border-radius:6px;padding:12px 14px;box-shadow:0 1px 3px rgba(30,60,90,.06)}
+.chart-card h4{font-size:14px;color:#333;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.chart-card h4::before{content:"";width:4px;height:14px;background:#0C95E7;border-radius:2px}
+.chart-box{height:210px}
+
+/* 开关 */
+.sw{width:40px;height:20px;border-radius:10px;background:#cdd6e0;position:relative;cursor:pointer;transition:background .2s;display:inline-flex;align-items:center}
+.sw::after{content:"";position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;left:2px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.sw.on{background:#0C95E7}
+.sw.on::after{left:22px}
+
+/* 弹窗 */
+#overlay{position:fixed;inset:0;background:rgba(20,35,55,.45);z-index:100;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 0}
+#overlay.show{display:flex}
+.modal{background:#fff;border-radius:8px;width:640px;max-width:94vw;box-shadow:0 10px 40px rgba(0,0,0,.25);animation:pop .18s ease}
+@keyframes pop{from{transform:translateY(-14px);opacity:0}to{transform:none;opacity:1}}
+.m-head{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1px solid #f0f2f5;font-size:15px;font-weight:600;color:#333}
+.m-head .x{cursor:pointer;color:#9aa5b1;font-size:18px;line-height:1}
+.m-head .x:hover{color:#333}
+.m-body{padding:18px 22px}
+.m-foot{padding:14px 22px;text-align:center;border-top:1px solid #f0f2f5;display:flex;justify-content:center;gap:14px}
+.m-title-sub{color:#9aa5b1;font-size:12px;margin-top:4px;font-weight:400}
+.dlg-tabs{display:flex;gap:30px;border-bottom:1px solid #eee;margin:6px 0 16px}
+.dlg-tab{padding:9px 2px;cursor:pointer;color:#666;border-bottom:2px solid transparent;margin-bottom:-1px;font-size:14px}
+.dlg-tab.active{color:#1296DB;border-bottom-color:#1296DB;font-weight:600}
+
+/* 时间轴（弹窗详情） */
+.tl{display:grid;grid-template-columns:34px 1fr;gap:0}
+.tl-node{grid-column:1;justify-self:center;width:30px;height:30px;border-radius:50%;background:#fff;border:2px solid #F5A623;display:flex;align-items:center;justify-content:center;color:#F5A623;z-index:1}
+.tl-line{grid-column:1;width:2px;background:#e3e9ef;margin:0 auto;align-self:stretch}
+.tl-card{grid-column:2;background:#F7F8FA;border-radius:6px;padding:12px 16px;margin-bottom:14px;font-size:13px;line-height:1.9}
+.tl-card.hot{background:#FDF6E7;border-left:3px solid #F5A623}
+.tl-card b{font-weight:600;color:#333}
+.tl-card .val{font-family:Consolas,monospace;color:#1296DB;font-style:normal}
+.tl-label{grid-column:2;display:flex;align-items:center;gap:8px;font-size:13px;color:#555;margin-bottom:8px}
+
+/* 表单 */
+.frow{display:flex;align-items:center;margin-bottom:16px}
+.frow label{width:90px;color:#555;font-size:13px;flex:none}
+.frow .req{color:#F0483E;margin-right:3px}
+.frow input,.frow select{flex:1;height:34px;border:1px solid #d9dee5;border-radius:4px;padding:0 10px;font-size:13px;outline:none}
+.frow input:focus,.frow select:focus{border-color:#0C95E7}
+.frow .cnt{flex:none;color:#b6c0cb;font-size:12px;margin-left:8px;width:40px;text-align:right}
+.frow .half{flex:1;display:flex;align-items:center;gap:10px}
+
+/* 进程树 */
+.ptree{display:flex;gap:0;align-items:stretch}
+.ptree-left{display:flex;flex-direction:column;justify-content:space-around;padding:10px 0}
+.pnode{background:#fff;border:1px solid #c8d2dc;border-radius:4px;padding:6px 14px;text-align:center;font-family:Consolas,monospace;font-size:13px;color:#333;width:130px}
+.pnode.bad{border-color:#F0483E;color:#F0483E;font-style:italic}
+.parrow{width:2px;background:#F0483E;margin:4px auto;height:18px;position:relative}
+.parrow::after{content:"";position:absolute;bottom:-2px;left:-3px;border:4px solid transparent;border-top-color:#F0483E}
+.ptree-detail{flex:1;font-size:12.5px;line-height:1.85;color:#555;padding:4px 0 4px 16px;border-left:1px dashed #e3e9ef;margin-left:8px}
+.ptree-detail b{color:#333}
+.ptree-detail .val{font-family:Consolas,monospace;color:#1296DB}
+.ptree-detail .bad{color:#F0483E}
+
+/* 日志分析 */
+.log-layout{display:grid;grid-template-columns:1fr 270px;gap:14px;padding:0 16px}
+.log-card{background:#fff;border:1px solid #e8edf2;border-radius:6px;padding:12px 14px;margin-bottom:12px}
+.pill{display:inline-block;border:1px solid #0C95E7;color:#1296DB;border-radius:12px;padding:2px 10px;font-size:12px;margin-right:6px;background:#fff}
+.pill.gray{border-color:#d9dee5;color:#666}
+.pill.purple{border-color:#b07cdb;color:#9b59d0;background:#faf5ff}
+.pill.bluefill{background:#E6F5FD;border-color:#9fd8f5;color:#1296DB}
+.log-body{margin-top:8px;color:#555;line-height:1.7}
+.log-body .src{color:#F0483E}
+.log-side .grp{background:#fff;border-radius:6px;padding:10px 14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(30,60,90,.05)}
+.srow{display:flex;justify-content:space-between;padding:7px 0;color:#555;font-size:13px;border-bottom:1px dashed #f0f2f5}
+.srow .num{color:#8a94a6;font-family:Consolas,monospace}
+.filterbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px}
+.rr{color:#F0483E;font-weight:700}
+
+/* toast */
+#toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:rgba(40,50,65,.92);color:#fff;padding:9px 22px;border-radius:4px;font-size:13px;z-index:200;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+@media(max-width:1200px){.asset-cards{grid-template-columns:repeat(3,1fr)}.chart-row{grid-template-columns:1fr}.log-layout{grid-template-columns:1fr}}
+@media(max-width:768px){#view input,#view select,#view textarea{font-size:16px}}
+</style>
+</head>
+<body>
+<div id="body">
+  <aside id="side">
+    <div class="brand">
+      <img src="assets/ys-logo.png" style="width:158px;height:auto;display:block;margin:6px auto 0">
+    </div>
+    <nav id="menu"></nav>
+    <div id="sidever">8.0.5 增强版</div>
+  </aside>
+  <div id="right">
+  <div id="topbar">
+    <div class="tb-left">
+      <img class="tb-ic" src="assets/ys/t-calendar.png">
+      <span>2022-08-08 星期一</span>
+    </div>
+    <div class="tb-right">
+      <span class="tb-item" onclick="toast('当前登录用户：（演示）')"><span class="avatar"><img class="tb-ic" src="assets/ys/t-avatar.png"></span>Zg_sinosteel</span>
+      <span class="tb-item" onclick="toast('修改密码：演示功能')">
+        <img class="tb-ic" src="assets/ys/t-key.png">修改密码</span>
+      <span class="tb-item" onclick="toast('已安全退出（演示）')">
+        <img class="tb-ic" src="assets/ys/t-power.png">退出系统</span>
+    </div>
+  </div>
+  <main id="main">
+    <div id="crumbbar">
+      <div id="crumb"></div>
+      <div class="func-note" onclick="toast('功能说明：演示')">功能说明
+        <img src="assets/ys/modal-gear.png" style="height:14px;width:auto;object-fit:contain;vertical-align:-2px">
+      </div>
+    </div>
+    <div id="view"></div>
+  </main>
+  </div>
+</div>
+<div id="overlay"><div class="modal" id="modalbox"></div></div>
+<div id="toast"></div>
+<script>
+/* ================= 基础工具 ================= */
+var charts=[];
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},1800);}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function disposeCharts(){charts.forEach(function(c){try{c.dispose();}catch(e){}});charts=[];}
+function initChart(dom,opt){if(!window.echarts){return;}var c=echarts.init(dom);c.setOption(opt);charts.push(c);return c;}
+
+/* OS 图标：Windows 四色窗口 / Linux 企鹅 */
+function osIcon(os){
+  if(os==='Linux'){return '<img src="assets/ys/os-linux.png" style="height:16px;width:auto;object-fit:contain;vertical-align:-3px">';}
+  return '<img src="assets/ys/os-windows.png" style="height:16px;width:auto;object-fit:contain;vertical-align:-3px">';
+}
+/* 菜单小图标 */
+var MI={
+ info:'<img class="m2-ic" src="assets/ys/sub-info.png">',
+ server:'<img class="m2-ic" src="assets/ys/card-server.png">',
+ app:'<img class="m2-ic" src="assets/ys/sub-list.png">',
+ grid:'<img class="m2-ic" src="assets/ys/sub-fw.png">',
+ list:'<img class="m2-ic" src="assets/ys/sub-list.png">',
+ risk:'<img class="m2-ic" src="assets/ys/sub-scan.png">',
+ bug:'<img class="m2-ic" src="assets/ys/sub-bug.png">',
+ chart:'<img class="m2-ic" src="assets/ys/sub-url.png">',
+ gear:'<img class="m2-ic" src="assets/ys/sub-gear.png">',
+ update:'<img class="m2-ic" src="assets/ys/sub-update.png">',
+ cpu:'<img class="m2-ic" src="assets/ys/sub-cpu.png">',
+ alert:'<img class="m2-ic" src="assets/ys/sub-alarm.png">',
+ scan:'<img class="m2-ic" src="assets/ys/sub-scan.png">',
+ brute:'<img class="m2-ic" src="assets/ys/sub-brute.png">',
+ login:'<img class="m2-ic" src="assets/ys/sub-login.png">',
+ door:'<img class="m2-ic" src="assets/ys/sub-door.png">',
+ shell:'<img class="m2-ic" src="assets/ys/sub-shell.png">',
+ tree:'<img class="m2-ic" src="assets/ys/sub-privesc.png">',
+ file:'<img class="m2-ic" src="assets/ys/sub-webshell.png">',
+ rce:'<img class="m2-ic" src="assets/ys/sub-rce.png">',
+ log:'<img class="m2-ic" src="assets/ys/sub-log.png">',
+ user:'<img class="m2-ic" src="assets/ys/sub-user.png">'
+};
+
+/* ================= 菜单结构 ================= */
+var MENU=[
+ {id:'asset',label:'资产管理',children:[
+   {h:'#/tlock/asset-info',label:'资产信息',ic:MI.info},
+   {h:'#/tlock/server',label:'服务器资产',ic:MI.server},
+   {h:null,label:'资产收集',ic:MI.list,note:'资产收集：演示模块'},
+   {h:null,label:'主机发现',ic:MI.scan,note:'主机发现：演示模块'},
+   {h:null,label:'分组管理',ic:MI.grid,note:'分组管理：演示模块'},
+   {h:null,label:'后台URL梳理',ic:MI.list,note:'后台URL梳理：演示模块'},
+   {h:null,label:'资产变更',ic:MI.chart,note:'资产变更：演示模块'}
+ ]},
+ {id:'behavior',label:'行为管理',children:[
+   {h:'#/tlock/app-whitelist',label:'应用白名单',ic:MI.app}
+ ]},
+ {id:'micro',label:'微隔离',children:[
+   {h:'#/tlock/firewall-policy',label:'防火墙',ic:MI.grid},
+   {h:'#/tlock/port-whitelist',label:'端口白名单',ic:MI.list},
+   {h:'#/tlock/external-whitelist',label:'外连白名单',ic:MI.list}
+ ]},
+ {id:'risk',label:'风险发现',children:[
+   {h:'#/tlock/risk-account',label:'账户风险',ic:MI.user},
+   {h:'#/tlock/vuln',label:'软件漏洞',ic:MI.bug},
+   {h:null,label:'基线检查',ic:MI.list,note:'基线检查：演示模块'},
+   {h:null,label:'病毒查杀',ic:MI.bug,note:'病毒查杀：演示模块'}
+ ]},
+ {id:'threat',label:'威胁监测',children:[
+   {h:'#/tlock/threat-overview',label:'威胁总览',ic:MI.alert},
+   {h:'#/tlock/scan',label:'恶意扫描',ic:MI.scan},
+   {h:'#/tlock/brute',label:'暴力破解',ic:MI.brute},
+   {h:'#/tlock/illegal-login',label:'异常登录',ic:MI.login},
+   {h:'#/tlock/backdoor',label:'后门检测',ic:MI.door},
+   {h:'#/tlock/webshell',label:'WebShell',ic:MI.file},
+   {h:'#/tlock/reverse-shell',label:'反弹shell',ic:MI.shell},
+   {h:'#/tlock/privesc',label:'本地提权',ic:MI.tree},
+   {h:'#/tlock/fileless',label:'无文件攻击',ic:MI.file},
+   {h:'#/tlock/rce',label:'RCE利用',ic:MI.rce}
+ ]},
+ {id:'analysis',label:'分析中心',children:[
+   {h:'#/tlock/log-analysis',label:'日志分析',ic:MI.log}
+ ]},
+ {id:'protect',label:'安全防护',children:[
+   {h:'#/tlock/func-setting',label:'功能设置',ic:MI.gear},
+   {h:'#/tlock/update',label:'更新管理',ic:MI.update}
+ ]},
+ {id:'ops',label:'安全运维',children:[
+   {h:'#/tlock/performance',label:'性能监控',ic:MI.cpu}
+ ]},
+ {id:'download',label:'下载中心',children:[],note:'下载中心：演示模块'},
+ {id:'general',label:'通用设置',children:[
+   {h:null,label:'IP显示设置',ic:MI.list,note:'IP显示设置：演示模块'},
+   {h:null,label:'IP地址管理',ic:MI.list,note:'IP地址管理：演示模块'},
+   {h:null,label:'告警设置',ic:MI.alert,note:'告警设置：演示模块'},
+   {h:'#/tlock/sub-account',label:'子账户管理',ic:MI.user}
+ ]}
+];
+var openMenus={};
+MENU.forEach(function(m){if(m.children.length)openMenus[m.id]=false;});
+
+var M1IMG={asset:'m-asset.png',behavior:'m-behavior.png',micro:'m-micro.png',risk:'m-risk.png',threat:'m-threat.png',analysis:'m-analysis.png',protect:'m-protect.png',ops:'m-ops.png',download:'m-download.png',general:'sub-account.png'};
+function renderMenu(){
+  var html='';
+  MENU.forEach(function(m){
+    var open=openMenus[m.id];
+    if(m.h){}
+    html+='<div class="m1" onclick="menuClick(\''+m.id+'\')"><img class="m1-ic" src="assets/ys/'+M1IMG[m.id]+'">'+m.label+'<span class="arrow">▶</span></div>';
+    if(open){
+      m.children.forEach(function(c){
+        var on=(location.hash===c.h);
+        var ic=c.ic||'';
+        if(on){ic=ic.replace(/(assets\/ys\/)([^"]+?)(\.png)/g,'$1$2-blue$3');}
+        html+='<div class="m2'+(on?' active':'')+'" '+(c.h?'onclick="location.hash=\''+c.h+'\'"':'onclick="toast(\''+c.note+'\')"')+'>'+ic+c.label+'</div>';
+      });
+    }
+  });
+  document.getElementById('menu').innerHTML=html;
+}
+function menuClick(id){
+  var m=MENU.find(function(x){return x.id===id;});
+  if(!m.children.length){toast(m.note||'演示模块');return;}
+  openMenus[id]=!openMenus[id];
+  renderMenu();
+}
+
+/* ================= 通用组件 ================= */
+var TABICONS={'基础信息':'tab-info.png','离线服务器':'tab-offline.png','硬件配置':'tab-hardware.png','运维信息':'tab-ops.png'};
+function tabsBlock(list,active,key,nav,icons){
+  var ic=icons||TABICONS;
+  return '<div class="tabs">'+list.map(function(t){
+    var oc=nav?("location.hash='"+nav(t)+"'"):("setTab('"+key+"','"+t+"')");
+    var im=ic&&ic[t]?('<img src="assets/ys/'+ic[t]+'" class="tab-ic">'):'';
+    return '<div class="tab'+(t===active?' active':'')+'" onclick="'+oc+'">'+im+t+'</div>';
+  }).join('')+'</div>';
+}
+function grid(cols,heads,rows){
+  var h='<table class="grid"><colgroup>'+cols.map(function(w){return '<col style="width:'+w+'%">';}).join('')+'</colgroup><thead><tr><th style="width:34px"><input type="checkbox" class="chk"></th>'+heads.map(function(x){return '<th>'+x+'</th>';}).join('')+'</tr></thead><tbody>'+rows.map(function(r){return '<tr>'+r+'</tr>';}).join('')+'</tbody></table>';
+  return h;
+}
+function pager(total,pageSize,cur){
+  var pages=Math.max(1,Math.ceil(total/pageSize));
+  var btns='';
+  btns+='<button class="pg dis" onclick="toast(\'演示分页\')">‹</button>';
+  var show=[1,2,3,4,5,6];
+  show.forEach(function(p){if(p<=pages)btns+='<button class="pg'+(p===cur?' on':'')+'" onclick="toast(\'演示分页：第'+p+'页\')">'+p+'</button>';});
+  if(pages>6)btns+='<span style="color:#9aa5b1">…</span><button class="pg" onclick="toast(\'演示分页\')">'+pages+'</button>';
+  btns+='<button class="pg" onclick="toast(\'演示分页\')">›</button>';
+  return '<div class="pager">共 '+total.toLocaleString()+' 条 <select><option>'+pageSize+'条/页</option><option>15条/页</option><option>30条/页</option></select>'+btns+'<span class="goto">前往 <input value="'+cur+'"> 页</span></div>';
+}
+function emptyState(){
+  return '<div class="empty"><img src="assets/ys/empty-clipboard.png" style="width:180px;height:auto"><div>暂无数据</div></div>';
+}
+function openModal(html){document.getElementById('modalbox').innerHTML=html;document.getElementById('overlay').classList.add('show');}
+function closeModal(){document.getElementById('overlay').classList.remove('show');}
+document.getElementById('overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+function mHead(title,icon){return '<div class="m-head"><span style="display:flex;align-items:center;gap:8px"><img src="assets/ys/'+(icon||'modal-gear.png')+'" style="height:17px;width:auto;object-fit:contain">'+title+'</span><span class="x" onclick="closeModal()" style="cursor:pointer;font-size:16px">×</span></div>';}
+
+/* ================= 视图注册 ================= */
+var VIEWS={};
+function regView(h,crumb,render,mount){VIEWS[h]={crumb:crumb,render:render,mount:mount||null};}
+
+var ST={}; /* 各视图 tab 状态 */
+function setTab(k,v){ST[k]=v;render();}
+
+/* ---------- 视图1：资产信息 ---------- */
+regView('#/tlock/asset-info',['资产管理','资产信息'],function(){
+  var cards=[
+    ['服务器',131,'#0C95E7'],['进程','20,344','#15B26B'],['账户','2,771','#9b59d0'],['软件应用','1,462','#15B26B'],['web站点',289,'#F06292'],['web服务',150,'#15B26B'],
+    ['web框架',323,'#0C95E7'],['数据库',91,'#9b59d0'],['端口','2,039','#F08A24'],['网络连接','45,784','#9b59d0'],['启动服务','12,485','#F08A24'],['安装包','44,970','#0C95E7'],
+    ['计划任务',498,'#15B26B'],['环境变量','3,106','#F08A24'],['内核模块','13,439','#F06292'],['注册表','3,360','#0C95E7'],['证书资产','4,503','#9b59d0'],['类库资产','40,303','#15B26B']
+  ];
+  var CIMG={'服务器':'card-server.png','进程':'card-proc.png','账户':'card-account.png','软件应用':'card-app.png','web站点':'card-website.png','web服务':'card-web.png','web框架':'card-frame.png','数据库':'card-db.png','端口':'card-port.png','网络连接':'card-net.png','启动服务':'card-start.png','安装包':'card-pkg.png','计划任务':'card-task.png','环境变量':'card-env.png','内核模块':'card-kernel.png','注册表':'card-reg.png','证书资产':'card-cert.png','类库资产':'card-lib.png'};
+  return '<div class="bigsearch"><div class="box"><input placeholder="请输入关键字查询"><div class="icons"><img src="assets/ys/ico-search.png"><img src="assets/ys/ico-star.png"></div></div></div>'
+  +'<div class="search-links"><span class="g" onclick="toast(\'已清空查询条件（演示）\')">清空条件</span><span class="b" onclick="toast(\'语法查询帮助（演示）\')"><img src="assets/ys/ico-syntax.png" style="height:16px;width:auto;object-fit:contain">语法查询</span></div>'
+  +'<div style="padding:18px 16px 0;display:flex;align-items:center;gap:8px;color:#333;font-size:14px">快捷搜索：</div>'
+  +'<div class="sec-title" style="display:flex"><span style="background:#0C95E7;color:#fff;border-radius:4px;padding:2px 10px;font-weight:600">资产总数</span><span style="flex:1"></span><button class="btn btn-sm" onclick="toast(\'导出资产信息（演示）\')">导出</button></div>'
+  +'<div class="asset-cards">'+cards.map(function(c){
+      return '<div class="acard" onclick="toast(\'查看资产详情（演示）\')"><div class="t"><img src="assets/ys/'+CIMG[c[0]]+'" style="height:20px;width:auto;object-fit:contain">'+c[0]+'</div><div class="v" style="color:'+c[2]+'">'+c[1]+'</div><div class="s">总数</div></div>';
+    }).join('')+'</div>';
+});
+
+/* ---------- 视图2：服务器资产 ---------- */
+regView('#/tlock/server',['资产管理','服务器资产'],function(){
+  var rows=[
+    ['Win','SINOSTEE-60E8…','在线','SSLLOG','48aa48db09c8…','10.0.21.33','Microsoft Windows S…','10.0.21.33','fe80:00:00:00:250:56f…','未分组','--'],
+    ['Win','SSPM1','在线','VSS文档服务器','89f07b597c368…','10.0.21.21','Microsoft Windows S…','10.0.21.21','fe80:00:00:00:250:56f…','未分组','Intel(R) Xeon(R) Sil…'],
+    ['Linux','db10new.sinoste…','在线','db10测试数据库','6efb6c1ba4503…','10.0.2.138','Red Hat Enterprise Li…','10.0.2.138','fe80:250:56ff:feb7:67c8','未分组','Intel(R) Xeon(R) CP…'],
+    ['Win','WIN-PH5JN1KT…','在线','天擎','79cd5fe6f7564…','10.0.6.103','Microsoft Windows S…','10.0.6.103','fe80:00:00:00:c1b5e…','未分组','Intel(R) Xeon(R) Gol…'],
+    ['Win','ADMINISTRATOR','在线','机房监控系统','5addda085cea…','10.0.7.235','Microsoft Windows S…','10.0.7.235','fe80:00:00:00:2084:d…','未分组','Intel(R) Celeron(R) C…'],
+    ['Win','BOCHK411','在线','港中银前置机','f2ce9583a8731…','10.0.4.11','Microsoft Windows S…','10.0.4.11','fe80:00:00:00:cc99:4…','未分组','Intel(R) Xeon(R) CP…'],
+    ['Win','WINDNSA2015','在线','外网DNS','f656ae744a0ad…','10.0.21.98','Microsoft Windows S…','10.0.21.98','fe80:00:00:00:250:56f…','未分组','Intel(R) Xeon(R) CP…'],
+    ['Linux','localhost.localdo…','在线','图纸打印服务器','d24091ddf5941…','10.0.11.70','CentOS Linux releas…','127.0.0.1,10.0.11.70…','fe80:ee5b:f75f:cef7:1…','未分组','Intel(R) Xeon(R) Gol…'],
+    ['Linux','sinosteelCDP2','在线','灾备CDP2','90c408668cb4d…','10.0.2.159','Enterprise Linux Ente…','10.0.2.159','fe80:224:e8ff:fe76:dd9a','未分组','Intel(R) Xeon(R) CP…'],
+    ['Win','zgjcpdf','在线','制品院-质检中心liims系','c79960472e2d…','172.17.110.22','Microsoft Windows S…','172.17.110.22,39.107…','fe80:00:00:00:4c4b:d…','未分组','Intel(R) Xeon(R) Plati…']
+  ];
+  var cols=[13,7,12,11,9,13,10,12,7,8];
+  var heads=['服务器名称','在线状态 <span class="sort">▼</span>','服务器别名','AgentID <span class="sort">◆</span>','主机IP','操作系统 <span class="sort">▼</span>','IPv4','IPv6','所属分组','cpu'];
+  var body=rows.map(function(r){
+    return '<td>'+osIcon(r[0])+' '+r[1]+'</td><td class="online">'+r[2]+'</td><td>'+r[3]+'</td><td class="mono" style="color:#666">'+r[4]+'</td><td class="mono">'+r[5]+'</td><td>'+r[6]+'</td><td class="mono">'+r[7]+'</td><td class="mono" style="color:#666">'+r[8]+'</td><td>'+r[9]+'</td><td class="mono">'+r[10]+'</td>';
+  }).join('</tr>');
+  return '<div class="panel">'+tabsBlock(['基础信息','离线服务器','硬件配置','运维信息'],ST['server']||'基础信息','server')
+  +'<div class="toolbar"><button class="btn btn-p" onclick="toast(\'导出服务器资产（演示）\')">导出</button><span class="sp"></span><div class="kw">服务器IP/服务器<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(131,10,1)+'</div>';
+});
+
+/* ---------- 视图3：应用白名单 ---------- */
+regView('#/tlock/app-whitelist',['行为管理','应用白名单'],function(){
+  var rows=[
+    ['Linux','localhost','安全网关服务器…','在线','Linux','172.17.0.1,10.0.11.22…','fe80::e975:d351:437…','关闭'],
+    ['Win','BOCHK411','港中银前置机','在线','Windows','10.0.4.11','fe80:00:00:00:cc99:4…','关闭'],
+    ['Linux','IZ2zea02wwgih1…','制品院-质检中心','在线','Linux','172.18.0.1,172.17.11…','--','关闭'],
+    ['Linux','dbext.sinosteel.c…','ext数据库正式','在线','Linux','10.0.2.26,10.0.2.125…','--','未知'],
+    ['Win','WINDNSA2015','外网DNS','在线','Windows','10.0.21.98','fe80:00:00:00:250:56…','关闭'],
+    ['Win','ICBC402','工行前置机','在线','Windows','10.0.4.2','--','关闭'],
+    ['Linux','localhost.localdo…','nginx（移动邮…','在线','Linux','10.0.21.61,127.0.0.1','fe80::250:56ff:feb3:7…','未知'],
+    ['Linux','IZ2zeir9y3549fzk…','制品院-质检中…','在线','Linux','172.18.0.1,172.17.11…','--','关闭'],
+    ['Win','WIN-JYYUF0PH…','中信前置机','在线','Windows','10.0.4.10','--','关闭'],
+    ['Win','WIN-KBLHMJLJ…','金属矿山杂志（…','离线','Windows','192.168.10.13','fe80:00:00:00:8c14:7…','关闭']
+  ];
+  var cols=[15,13,7,8,8,15,16,8,7];
+  var heads=['服务器名称','服务器别名','在线状态 <span class="sort">▼</span>','所属分组','操作系统 <span class="sort">▼</span>','IPv4','IPv6','策略名称','异常数'];
+  var body=rows.map(function(r){
+    return '<td>'+osIcon(r[0])+' '+r[1]+'</td><td>'+r[2]+'</td><td class="'+(r[3]==='在线'?'online':'offline')+'">'+r[3]+'</td><td>--</td><td>'+r[4]+'</td><td class="mono">'+r[5]+'</td><td class="mono" style="color:#666">'+r[6]+'</td><td class="'+(r[7]==='关闭'?'link':'offline')+'"'+(r[7]==='关闭'?' onclick="toast(\'策略详情（演示）\')"':'')+'>'+r[7]+'</td><td>0</td>';
+  }).join('</tr>');
+  return '<div class="panel">'+tabsBlock(['服务器管理','策略管理'],ST['appw']||'服务器管理','appw')
+  +'<div class="toolbar"><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">应用策略</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">重置</button><button class="btn" onclick="toast(\'例外设置（演示）\')">例外设置</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(131,10,1)+'</div>';
+});
+
+/* ---------- 视图4：防火墙策略配置 ---------- */
+regView('#/tlock/firewall-policy',['微隔离','防火墙'],function(){
+  var rows=[
+    ['10.0.11.1（远）','3条规则','Zg_sinosteel','2022-08-06 05:09:12','Zg_sinosteel','2022-08-06 10:45:17'],
+    ['10.0.11.1（无公网）','1条规则','Zg_sinosteel','2022-08-06 06:18:57','Zg_sinosteel','2022-08-06 10:45:39'],
+    ['封禁156.251.172.38','1条规则','ZG_shijiazyuan','2022-08-03 09:58:51','--','--'],
+    ['防火墙策略','1条规则','Zg_sinosteel','2022-08-03 09:17:38','--','--'],
+    ['10.0.11.1','2条规则','Zg_sinosteel','2022-08-06 05:12:01','Zg_sinosteel','2022-08-06 16:04:36']
+  ];
+  var cols=[18,10,14,16,14,16,12];
+  var heads=['策略名称','策略概况','创建者','创建时间 <span class="sort">▼</span>','更新者','变更时间 <span class="sort">▼</span>','操作'];
+  var body=rows.map(function(r){
+    return '<td class="mono">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td class="mono" style="color:#666">'+r[3]+'</td><td>'+r[4]+'</td><td class="mono" style="color:#666">'+r[5]+'</td><td class="op-links"><span class="link" onclick="toast(\'查看策略（演示）\')">查看</span><span class="link" onclick="openEditRule()">编辑</span><span class="link" onclick="toast(\'已删除策略（演示）\')">删除</span></td>';
+  }).join('</tr>');
+  return '<div class="panel">'+tabsBlock(['访问告警','服务器规则配置','策略配置'],ST['fw']||'策略配置','fw')
+  +'<div class="toolbar"><button class="btn btn-p" onclick="toast(\'新建策略（演示）\')">新建</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">删除</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(5,10,1)+'</div>';
+});
+
+/* 弹窗1：编辑规则 */
+function openEditRule(){
+  openModal(mHead('编辑规则','modal-bulb.png')
+  +'<div class="m-body">'
+  +'<div class="frow"><label><span class="req">*</span>规则名称</label><input value="10.10.29.9（远程）"><span class="cnt">14/128</span></div>'
+  +'<div class="frow"><label>状态</label><select><option>关闭</option><option>开启</option></select></div>'
+  +'<div class="frow"><label>动作</label><select><option>允许</option><option>阻止</option></select></div>'
+  +'<div class="frow"><label>方向</label><select><option>入方向</option><option>出方向</option></select></div>'
+  +'<div class="frow"><label>协议</label><select><option>TCP</option><option>UDP</option><option>ICMP</option></select></div>'
+  +'<div class="frow"><label>本地IP地址</label><span class="half"><label style="width:auto" class="link"><input type="radio" name="lip" checked> 所有地址</label><label style="width:auto;color:#666"><input type="radio" name="lip"> 自定义地址</label></span></div>'
+  +'<div class="frow"><label>本地端口</label><span class="half"><label style="width:auto" class="link"><input type="radio" name="lport" checked> 所有端口</label><label style="width:auto;color:#666"><input type="radio" name="lport"> 自定义端口</label></span></div>'
+  +'<div class="frow"><label>远程IP地址</label><span class="half"><label style="width:auto;color:#666"><input type="radio" name="rip"> 所有地址</label><label style="width:auto" class="link"><input type="radio" name="rip" checked> 自定义地址</label></span></div>'
+  +'<div class="frow"><label></label><textarea style="flex:1;height:70px;border:1px solid #d9dee5;border-radius:4px;padding:8px;resize:none;font-family:Consolas,monospace">10.10.29.9</textarea><span class="cnt">10/4096</span></div>'
+  +'<div class="frow"><label>远程端口</label><span class="half"><label style="width:auto" class="link"><input type="radio" name="rport" checked> 所有端口</label><label style="width:auto;color:#666"><input type="radio" name="rport"> 自定义端口</label></span></div>'
+  +'</div>'
+  +'<div class="m-foot"><button class="btn btn-p" onclick="closeModal();toast(\'规则已提交（演示）\')">提交</button><button class="btn" onclick="closeModal()">取消</button></div>');
+}
+
+/* ---------- 视图5/6：端口白名单 / 外连白名单（空态） ---------- */
+function emptyPanel(crumb,label){
+  var cols=[18,10,14,14,14,14,16];
+  var heads=['规则名称','动作','方向','协议','本地地址','远程地址','状态'];
+  return '<div class="panel">'+tabsBlock(['访问告警','服务器规则配置','策略配置'],ST['empty']||'策略配置','empty')
+  +'<div class="toolbar"><button class="btn btn-p" onclick="toast(\'新建规则（演示）\')">新建</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">删除</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[])+emptyState()+'</div></div>';
+}
+regView('#/tlock/port-whitelist',['微隔离','端口白名单'],function(){return emptyPanel();});
+regView('#/tlock/external-whitelist',['微隔离','外连白名单'],function(){return emptyPanel();});
+
+/* ---------- 视图7：风险账户 ---------- */
+regView('#/tlock/risk-account',['风险发现','账户风险'],function(){
+  var rows=[
+    ['Win','_SSL_baiyx','2022-08-06 17:52:00','SINOSTEEL-SS…','SSLAPP','eff9a31eb92c7f68a4…','10.0.21.35'],
+    ['Win','wushen','2022-08-05 17:09:00','WINDOWS-MDS…','--','c6d6eb55e1e8899a3…','10.0.11.1'],
+    ['Win','Administrator','2022-08-05 17:09:00','WINDOWS-MDS…','--','c6d6eb55e1e8899a3…','10.0.11.1'],
+    ['Win','_SSL_fanwt','2022-08-05 10:50:33','SINOSTEEL-SS…','SSLAPP','eff9a31eb92c7f68a4…','10.0.21.35'],
+    ['Win','_SSL_zhaorui','2022-08-05 10:50:33','SINOSTEEL-SS…','SSLAPP','eff9a31eb92c7f68a4…','10.0.21.35'],
+    ['Win','_SSL_jiangsz','2022-08-04 17:49:45','SINOSTEEL-SS…','SSLAPP','eff9a31eb92c7f68a4…','10.0.21.35'],
+    ['Linux','halt','2022-08-04 16:45:00','extinfo.sinosteel…','--','089f7a16e6ff31742a…','10.0.21.1'],
+    ['Linux','news','2022-08-04 16:45:00','extinfo.sinosteel…','--','089f7a16e6ff31742a…','10.0.21.1'],
+    ['Linux','sync','2022-08-04 16:45:00','extinfo.sinosteel…','--','089f7a16e6ff31742a…','10.0.21.1'],
+    ['Linux','shutdown','2022-08-04 16:45:00','extinfo.sinosteel…','--','089f7a16e6ff31742a…','10.0.21.1']
+  ];
+  var cols=[11,11,13,13,7,10,12,9,14];
+  var heads=['账户','风险类型 <span class="sort">▼</span>','最近发现时间 <span class="sort">◆</span>','服务器名称','在线状态 <span class="sort">▼</span>','服务器别名','AgentID','服务器IP','操作'];
+  var body=rows.map(function(r){
+    return '<td class="mono">'+r[1]+'</td><td>可远程账户</td><td class="mono" style="color:#666">'+r[2]+'</td><td>'+osIcon(r[0])+' '+r[3]+'</td><td class="online">在线</td><td>'+r[4]+'</td><td class="mono" style="color:#666">'+r[5]+'</td><td class="mono">'+r[6]+'</td><td class="op-links"><span class="link" onclick="toast(\'标记修复（演示）\')">标记修复</span><span class="link" onclick="toast(\'已加白（演示）\')">加白</span><span class="link" onclick="toast(\'账户详情（演示）\')">详情</span></td>';
+  }).join('</tr>');
+  return '<div class="panel">'+tabsBlock(['风险账户','弱口令','口令复用','口令扫描任务'],ST['ra']||'风险账户','ra')
+  +'<div class="toolbar"><button class="btn" onclick="toast(\'重新检测（演示）\')">重新检测</button><button class="btn" onclick="toast(\'白名单管理（演示）\')">白名单管理</button><button class="btn" onclick="toast(\'导出（演示）\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(1034,10,1)+'</div>';
+});
+
+/* ---------- 视图8：漏洞风险 ---------- */
+regView('#/tlock/vuln',['风险发现','软件漏洞'],function(){
+  var rows=[
+    ['高危','Struts2远程代…','CVE-2016-3081','远程代码执行','存在EXP','需要重启','启用动态方法调用时，…','无','2016-06-02 08:00:00','2022-07-24 12:12:09','12'],
+    ['高危','Sudo堆缓冲区…','CVE-2021-3156','缓冲区溢出','存在EXP-本地提权','需要重启','Sudo堆缓冲区溢出漏洞','无','2021-01-15 08:00:00','2022-07-24 12:12:09','39'],
+    ['危急','Struts2远程代…','CVE-2012-0838','远程代码执行','存在EXP','需要重启','当存在错误转换时，用…','无','2011-09-09 08:00:00','2022-07-24 12:12:08','6'],
+    ['中危','shiro反序列化…','CVE-2016-4437','反序列化漏洞','存在EXP','需要重启','shiro反序列化漏洞可…','无','2015-11-19 08:00:00','2022-07-24 12:12:08','6'],
+    ['危急','Apache Log4j远…','CVE-2021-44228','代码执行','存在EXP','需要重启','Apache Log4j存在远…','无','2021-12-10 08:00:00','2022-07-24 12:12:08','10'],
+    ['高危','Apache Tomcat …','CVE-2021-25329','反序列化漏洞','--','需要重启','Tomcat Session反序…','无','2021-03-01 08:00:00','2022-07-24 12:12:07','4'],
+    ['危急','Struts2远程代…','CVE-2016-4438','远程代码执行','存在EXP','需要重启','使用REST插件时校…','无','2016-04-02 08:00:00','2022-07-24 12:12:06','2'],
+    ['危急','XXL-JOB API接…','TYS-2020-0004','命令执行','存在EXP','无需重启','XXL-JOB存在API接…','无','2020-10-28 08:00:00','2022-07-24 12:12:04','1'],
+    ['危急','ActiveMQ反序…','CVE-2015-5254','反序列化漏洞','存在EXP','需要重启','ActiveMQ反序列化漏…','虚拟补丁','2015-07-10 08:00:00','2022-07-24 12:12:03','1'],
+    ['危急','Tomcat文件包…','CVE-2020-1938','文件包含漏洞','存在EXP','无需重启','Tomcat文件包含漏洞','虚拟补丁','2020-02-20 08:00:00','2022-07-24 12:12:03','1']
+  ];
+  var tagCls={'高危':'tag-high','危急':'tag-crit','中危':'tag-mid'};
+  var cols=[8,13,12,10,10,9,13,8,10,11,8];
+  var heads=['漏洞等级 <span class="sort">▼</span>','漏洞名','漏洞编号 <span class="sort">▼</span>','漏洞类型 <span class="sort">▼</span>','特征标签 <span class="sort">▼</span>','手动修复影响 <span class="sort">▼</span>','漏洞概述','防护措施 <span class="sort">▼</span>','发布时间','漏洞风险发现时间 <span class="sort">▼</span>','影响服务器数'];
+  var body=rows.map(function(r){
+    return '<td><span class="tag '+tagCls[r[0]]+'">'+r[0]+'</span></td><td>'+r[1]+'</td><td class="link mono" onclick="toast(\'漏洞详情（演示）\')">'+r[2]+'</td><td>'+r[3]+'</td><td>'+r[4]+'</td><td>'+r[5]+' <span style="color:#b6c0cb">ⓘ</span></td><td>'+r[6]+'</td><td>'+r[7]+'</td><td class="mono" style="color:#666">'+r[8]+'</td><td class="mono" style="color:#666">'+r[9]+'</td><td class="link" style="font-weight:600" onclick="toast(\'影响服务器列表（演示）\')">'+r[10]+'</td>';
+  }).join('</tr>');
+  return '<div class="panel">'+tabsBlock(['漏洞风险','已处置漏洞','扫描任务','虚拟补丁'],ST['vuln']||'漏洞风险','vuln')
+  +'<div class="toolbar"><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">修复验证</button><button class="btn" onclick="toast(\'导出（演示）\')">导出</button><button class="btn" onclick="toast(\'白名单管理（演示）\')">白名单管理</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(36,10,1)+'</div>';
+});
+
+/* ---------- 视图9：威胁总览 ---------- */
+regView('#/tlock/threat-overview',['威胁监测','威胁总览'],function(){
+  var rows=[
+    ['2022-08-08 01:50:14','--','--','10.0.5.11','netsrvin1.sinosteel.com','未分组','OOB带外攻击','带外攻击'],
+    ['2022-08-08 01:49:55','--','--','172.17.110.25','iZpyonup69affZ','未分组','利用wmic命令执…','代码执行'],
+    ['2022-08-08 01:49:55','--','--','172.17.110.25','iZpyonup69affZ','未分组','利用wmic命令执…','代码执行'],
+    ['2022-08-08 01:49:54','--','--','172.17.110.25','iZpyonup69affZ','未分组','利用wmic命令执…','代码执行'],
+    ['2022-08-08 01:49:34','--','--','10.0.5.11','netsrvin1.sinosteel.com','未分组','OOB带外攻击','带外攻击'],
+    ['2022-08-08 01:48:48','--','--','172.17.158.112','iZrozcdz1fantZ','未分组','利用wmic命令执…','代码执行'],
+    ['2022-08-08 01:48:47','--','--','172.17.158.112','iZrozcdz1fantZ','未分组','利用wmic命令执…','代码执行'],
+    ['2022-08-08 01:48:47','--','--','172.17.158.112','iZrozcdz1fantZ','未分组','利用wmic命令执…','代码执行']
+  ];
+  var cols=[13,9,8,11,15,9,15,10,8,12];
+  var heads=['发生时间 <span class="sort">◆</span>','攻击IP','IP所属 <span class="sort">◆</span>','受害IP <span class="sort">◆</span>','受害资产 <span class="sort">◆</span>','所属分组 <span class="sort">◆</span>','威胁事件 <span class="sort">◆</span>','威胁类型','威胁等级 <span class="sort">◆</span>','操作'];
+  var body=rows.map(function(r){
+    return '<td class="mono" style="color:#666">'+r[0]+'</td><td class="mono">'+r[1]+'</td><td>'+r[2]+'</td><td class="mono">'+r[3]+'</td><td>'+r[4]+'</td><td>'+r[5]+'</td><td>'+r[6]+'</td><td>'+r[7]+'</td><td><span class="tag tag-high">高危</span></td><td class="op-links"><span class="link" onclick="toast(\'不再记录该事件（演示）\')">不再记录</span><span class="link" onclick="toast(\'事件详情（演示）\')">详情</span><span style="color:#b6c0cb">…</span></td>';
+  }).join('</tr>');
+  return '<div class="panel"><div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0">'
+  +'<div class="utabs" style="padding:0">'+[['告警信息',1],['可疑威胁',0],['拦截事件',0]].map(function(t){return '<div class="utab'+(ST['to']===t[0]?' active':'')+'" onclick="setTab(\'to\',\''+t[0]+'\')">'+t[0]+'</div>';}).join('')+'</div>'
+  +'<div style="display:flex;align-items:center;gap:14px;color:#666;font-size:13px">隐藏图表 <span class="sw on" onclick="this.classList.toggle(\'on\')"></span> <span class="link" onclick="toast(\'自动刷新已开启（演示）\')">自动刷新</span> <span class="link" onclick="toast(\'告警设置（演示）\')">设置</span></div></div>'
+  +'<div class="chart-row"><div class="chart-card"><h4>威胁事件统计</h4><div class="stat-cards" style="padding:4px 0">'
+  +'<div class="statbox sc-crit"><span class="n">0</span><span class="u">条<br>危急</span></div>'
+  +'<div class="statbox sc-high"><span class="n">95</span><span class="u">条<br>高危</span></div>'
+  +'<div class="statbox sc-mid"><span class="n">0</span><span class="u">条<br>中危</span></div>'
+  +'<div class="statbox sc-low"><span class="n">0</span><span class="u">条<br>低危</span></div></div></div>'
+  +'<div class="chart-card"><h4>威胁分布</h4><div class="chart-box" id="ch-pie"></div></div>'
+  +'<div class="chart-card"><h4>威胁趋势</h4><div class="chart-box" id="ch-line"></div></div></div>'
+  +'<div class="toolbar"><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">已读未读</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">标记事件</button><button class="btn" onclick="toast(\'白名单管理（演示）\')">白名单管理</button><button class="btn" onclick="toast(\'操作历史（演示）\')">操作历史</button><button class="btn" onclick="toast(\'导出（演示）\')">导出</button><span class="sp"></span>'
+  +'<span class="link" style="display:flex;gap:14px;align-items:center"><img src="assets/ys/ico-cal.png" style="height:16px;width:auto;object-fit:contain"><img src="assets/ys/ico-alert.png" style="height:16px;width:auto;object-fit:contain"><img src="assets/ys/ico-bookmark.png" style="height:16px;width:auto;object-fit:contain"></span>'
+  +'<button class="btn" onclick="toast(\'高级筛选（演示）\')">高级筛选</button></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div></div>';
+},function(){
+  initChart(document.getElementById('ch-pie'),{
+    tooltip:{trigger:'item',formatter:'{b} {d}%'},
+    legend:{bottom:0,icon:'circle',itemWidth:9,textStyle:{color:'#666',fontSize:11}},
+    series:[{type:'pie',radius:['42%','66%'],center:['38%','44%'],
+      label:{formatter:'{d}%',fontSize:11,color:'#666'},labelLine:{length:8,length2:8},
+      data:[{value:55.79,name:'带外攻击',itemStyle:{color:'#7EC8F2'}},{value:43.16,name:'代码执行',itemStyle:{color:'#B39DDB'}},{value:1.05,name:'漏洞利用',itemStyle:{color:'#CE93D8'}}]}]
+  });
+  initChart(document.getElementById('ch-line'),{
+    legend:{right:0,top:0,icon:'circle',itemWidth:9,textStyle:{fontSize:11}},
+    grid:{left:26,right:12,top:26,bottom:22},
+    xAxis:{type:'category',data:['0:55','0:59','1:3','1:8','1:12','1:17','1:20','1:26','1:29','1:34','1:38','1:43','1:47','1:50'],axisLine:{lineStyle:{color:'#ddd'}},axisLabel:{fontSize:10,color:'#999'}},
+    yAxis:{type:'value',max:10,splitLine:{lineStyle:{color:'#f0f2f5'}},axisLabel:{fontSize:10,color:'#999'}},
+    series:[{name:'全部',type:'line',smooth:true,symbol:'circle',symbolSize:5,data:[2,1.5,2.2,3.8,2.6,3.2,5.6,2,1.2,1.6,3.8,1.1,9,1.3],lineStyle:{color:'#0C95E7'},itemStyle:{color:'#0C95E7'}},
+      {name:'已解决',type:'line',smooth:true,symbol:'circle',symbolSize:5,data:[0,0,0.2,0,0,0.5,0,0,0.3,0,0.2,0,0.1,0],lineStyle:{color:'#15B26B'},itemStyle:{color:'#15B26B'}}]
+  });
+});
+
+/* ---------- 视图10：恶意扫描 ---------- */
+regView('#/tlock/scan',['威胁监测','恶意扫描'],function(){
+  var rows=[
+    ['2022-08-07 15:23:50','10.151.2.103','10.151.35.228','10.151.2.103,111.21.3…','21,61654,61656,6165…','2'],
+    ['2022-08-07 07:57:43','10.0.11.2','109.74.204.123','10.0.11.2','9096,9099,9091,3001…','1'],
+    ['2022-08-07 07:23:08','172.17.110.22','45.61.138.37','172.17.110.22,39.107…','80,443,21,8080,8888…','1'],
+    ['2022-08-07 07:14:52','172.17.110.23','45.61.138.37','127.0.0.1,172.17.110…','80,443,21,8080,8888…','1'],
+    ['2022-08-07 07:12:48','172.17.110.35','139.59.253.254','10.42.5.0,127.0.0.1,1…','80,443,21,8080,8888…','1'],
+    ['2022-08-07 07:11:43','172.19.0.1','121.56.26.87','123.56.225.46,127.0…','443,80,8080,8888,80…','1'],
+    ['2022-08-07 06:52:22','172.17.110.36','157.245.200.68','172.17.110.36,39.105…','80,443,21,8888,1433…','1'],
+    ['2022-08-07 06:44:10','172.17.110.37','157.245.200.68','172.17.110.37,39.105…','80,21,8080,8888,143…','1'],
+    ['2022-08-07 03:32:33','172.17.110.40','47.103.138.4','127.0.0.1,172.17.110…','30403,30445,30756,3…','1'],
+    ['2022-08-06 23:13:05','172.17.110.25','171.34.177.26','101.201.253.245,172…','443,80,8080,8888,30…','1']
+  ];
+  var cols=[13,9,11,12,9,8,20,6,12];
+  var heads=['最近发生时间 <span class="sort">▼</span>','受害IP','攻击IP <span class="sort">▼</span>','资产IP','攻击类型 <span class="sort">▼</span>','威胁情报 <span class="sort">▼</span>','触发规则/端口','次数','操作'];
+  var body=rows.map(function(r,i){
+    var ip=r[2]+(i===0?'<span class="ispill">内</span>':'');
+    return '<td class="mono" style="color:#666">'+r[0]+'</td><td class="mono">'+r[1]+'</td><td class="mono" style="color:#F0483E">'+ip+'</td><td class="mono" style="color:#666">'+r[3]+'</td><td>端口扫描</td><td>--</td><td class="mono">'+r[4]+'</td><td>'+r[5]+'</td><td class="op-links"><span class="link" onclick="toast(\'已加黑IP（演示）\')">加黑IP</span><span class="link" onclick="toast(\'已加白IP（演示）\')">加白IP</span></td>';
+  }).join('</tr>');
+  return '<div class="panel">'+tabsBlock(['告警列表','攻击IP视角','受害IP视角','设置'],ST['scan']||'告警列表','scan')
+  +'<div class="toolbar"><button class="btn" onclick="toast(\'黑名单管理（演示）\')">黑名单管理</button><button class="btn" onclick="toast(\'白名单管理（演示）\')">白名单管理</button><button class="btn" onclick="toast(\'导出（演示）\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(1102,10,1)+'</div>';
+});
+
+/* ---------- 视图11：暴力破解 ---------- */
+regView('#/tlock/brute',['威胁监测','暴力破解'],function(){
+  var rows=[
+    ['167.94.145.58','Win','IZm9608nqm7w2…','制品院-质检中心liim…','333e05e53502…','172.17.110.20','172.17.110.20,59.110…','封停'],
+    ['121.89.194.108','Win','IZn8d0np6gs1mtZ','--','2a9cd43abe39…','172.17.231.237','172.17.231.237,121…','封停'],
+    ['121.89.206.174','Win','IZn8d0np6gs1mtZ','--','2a9cd43abe39…','172.17.231.237','172.17.231.237,121…','封停'],
+    ['167.248.133.119','Win','IZm9608nqm7w2…','制品院-质检中心liim…','333e05e53502…','172.17.110.20','172.17.110.20,59.110…','封停'],
+    ['183.200.85.17','Win','IZrozcdz1fantZ','公司网站','5e4f67025469a…','172.17.158.112','172.17.158.112,47.93…','封停'],
+    ['162.142.125.211','Win','IZm9608nqm7w2…','制品院-质检中心liim…','333e05e53502…','172.17.110.20','172.17.110.20,59.110…','封停'],
+    ['139.162.229.202','Win','IZy0064e07opmbZ','中钢招标官网服务器','1eb608d7dfdf9…','172.30.70.190','172.30.70.190,101.2…','解封'],
+    ['159.223.189.1','Win','IZn8d0np6gs1mtZ','--','2a9cd43abe39…','172.17.231.237','172.17.231.237,121…','封停'],
+    ['39.96.178.164','Win','IZy0064e07opmbZ','中钢招标官网服务器','1eb608d7dfdf9…','172.30.70.190','172.30.70.190,101.2…','封停'],
+    ['118.123.105.69','Win','IZn8d0np6gs1mtZ','--','2a9cd43abe39…','172.17.231.237','172.17.231.237,121…','解封'],
+    ['154.89.5.220','Win','IZy0064e07opmbZ','中钢招标官网服务器','1eb608d7dfdf9…','172.30.70.190','172.30.70.190,101.2…','封停'],
+    ['154.89.5.123','Win','IZn8d0np6gs1msZ','--','2d3e08ed49d2…','172.17.231.238','172.17.231.238,121…','解封'],
+    ['154.89.5.209','Win','IZn8d0np6gs1mtZ','--','2a9cd43abe39…','172.17.231.237','172.17.231.237,121…','解封']
+  ];
+  var times=['2022-08-08 00:06:43','2022-08-07 23:24:16','2022-08-07 22:39:45','2022-08-07 19:24:12','2022-08-07 02:35:25','2022-08-06 17:46:12','2022-08-06 09:37:20','2022-08-05 14:24:08','2022-08-05 11:17:06','2022-08-05 04:19:27','2022-08-05 03:17:02','2022-08-05 00:54:52','2022-08-04 22:49:22'];
+  var cols=[7,12,12,12,12,10,9,12,8];
+  var heads=['服务类型 <span class="sort">▼</span>','最近攻击时间 <span class="sort">▼</span>','攻击源IP <span class="sort">▼</span>','服务器名称','服务器别名','AgentID','服务器IP','IPv4','操作'];
+  var body=rows.map(function(r,i){
+    return '<td>RDP</td><td class="mono" style="color:#666">'+times[i]+'</td><td class="mono">'+r[0]+' <span style="color:#9aa5b1">外网</span></td><td>'+osIcon(r[1])+' '+r[2]+'</td><td>'+r[3]+'</td><td class="mono" style="color:#666">'+r[4]+'</td><td class="mono">'+r[5]+'</td><td class="mono" style="color:#666">'+r[6]+'</td><td class="op-links"><span class="link" onclick="toast(\''+r[7]+'（演示）\')">'+r[7]+'</span><span class="link" onclick="toast(\'已加白IP（演示）\')">加白IP</span></td>';
+  }).join('</tr>');
+  return '<div class="panel"><div class="toolbar"><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">批量操作</button><button class="btn" onclick="toast(\'白名单规则（演示）\')">白名单规则</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(234,15,1)+'</div>';
+});
+
+/* ---------- 视图12：违规登录（空态） ---------- */
+regView('#/tlock/illegal-login',['威胁监测','异常登录'],function(){
+  var cols=[12,11,10,10,13,13,12,10,9,10];
+  var heads=['时间 <span class="sort">▼</span>','登录账号','来源IP','登录区域','服务器名称','服务器别名','AgentID','服务器IP','IPv4','IPv6'];
+  return '<div class="panel">'+tabsBlock(['违规登录','可疑登录'],ST['login']||'违规登录',null,function(t){return t==='可疑登录'?'#/tlock/suspicious-login':'#/tlock/illegal-login';})
+  +'<div class="toolbar"><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">批量操作</button><button class="btn" onclick="toast(\'登录规则设置（演示）\')">登录规则设置</button><button class="btn" onclick="toast(\'告警设置（演示）\')">告警设置</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[])+emptyState()+'</div></div>';
+});
+
+/* ---------- 视图13：可疑登录 ---------- */
+regView('#/tlock/suspicious-login',['威胁监测','异常登录'],function(){
+  var rows=[['218.12.56.187','2022-07-28 10:12:42'],['10.29.0.13','2022-07-24 22:25:33'],['10.0.21.25','2022-07-22 18:13:21'],['125.46.17.194','2022-07-06 13:43:24'],['10.29.0.6','2022-06-27 10:08:44']];
+  var cols=[25,45,30];
+  var heads=['来源IP <span class="sort">◆</span>','发现时间 <span class="sort">◆</span>','操作'];
+  var body=rows.map(function(r){
+    return '<td class="mono">'+r[0]+'</td><td class="mono" style="color:#666">'+r[1]+'</td><td class="op-links"><button class="btn btn-sm" style="color:#1296DB;border-color:#9fd8f5" onclick="toast(\'被登录服务器（演示）\')">被登录服务器</button><span class="link" onclick="toast(\'已添加例外（演示）\')">添加例外</span></td>';
+  }).join('</tr>');
+  return '<div class="panel">'+tabsBlock(['违规登录','可疑登录'],'可疑登录',null,function(t){return t==='违规登录'?'#/tlock/illegal-login':'#/tlock/suspicious-login';})
+  +'<div class="toolbar"><button class="btn btn-p" onclick="toast(\'创建规则（演示）\')">创建规则</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">删除</button><button class="btn" onclick="toast(\'例外管理（演示）\')">例外管理</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(5,10,1)+'</div>';
+});
+
+/* ---------- 视图14：后门检测 ---------- */
+regView('#/tlock/backdoor',['威胁监测','后门检测'],function(){
+  var rows=[
+    ['2022-07-27 15:02:21','疑似利用PowerShell…','可疑进程参数','中天澄设计管理平台','10.142.2.50','命令行检测','未处理'],
+    ['2022-07-27 14:43:53','Frp代理隧道工具','代理隧道','中天澄设计管理平台','10.142.2.50','实时进程检测','隔离异常'],
+    ['2022-07-26 21:24:07','Fscan扫描工具','扫描工具','中钢衡机天翼云服务器','192.168.0.2','实时进程检测','未处理'],
+    ['2022-07-26 21:23:15','Fscan扫描工具','扫描工具','中钢衡机天翼云服务器','192.168.0.2','实时后门文件','未处理'],
+    ['2022-07-26 21:22:39','Fscan扫描工具','扫描工具','中钢衡机天翼云服务器','192.168.0.2','实时后门文件','未处理'],
+    ['2022-07-26 19:04:57','疑似执行密钥窃取程序','可疑进程参数','中天澄OA系统','10.142.7.51','命令行检测','未处理'],
+    ['2022-07-13 16:26:59','挖矿程序','挖矿程序','--','10.151.2.31','实时后门文件','未处理'],
+    ['2022-07-05 19:49:45','执行创建Linux系统s…','远程控制','制品院-质检中心liims主数据库','172.17.110.23','命令行检测','未处理'],
+    ['2022-07-05 19:49:03','执行创建Linux系统s…','远程控制','制品院-质检中心liims主数据库','172.17.110.23','命令行检测','未处理'],
+    ['2022-07-05 17:30:44','执行创建Linux系统s…','远程控制','制品院-质检中心liims','172.17.110.31','命令行检测','未处理']
+  ];
+  var cols=[12,16,10,8,15,9,9,10,11];
+  var heads=['发现时间 <span class="sort">▼</span>','后门名称','后门类型 <span class="sort">▼</span>','风险等级','服务器别名','服务器IP','来源','处置结果','操作'];
+  var body=rows.map(function(r){
+    return '<td class="mono" style="color:#666">'+r[0]+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td><td><span class="tag tag-high">高危</span></td><td>'+r[3]+'</td><td class="mono">'+r[4]+'</td><td>'+r[5]+'</td><td>'+(r[6]==='隔离异常'?'<span style="color:#F08A24">隔离异常 <span style="color:#F08A24">!</span></span>':r[6])+'</td><td class="op-links"><span class="link" onclick="toast(\'已加白（演示）\')">加白</span><span class="link" onclick="toast(\'后门详情（演示）\')">详情</span><span style="color:#b6c0cb">…</span></td>';
+  }).join('</tr>');
+  return '<div class="panel">'+tabsBlock(['告警列表','扫描任务'],ST['bd']||'告警列表','bd')
+  +'<div class="toolbar"><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">批量处理</button><button class="btn" onclick="toast(\'白名单管理（演示）\')">白名单管理</button><button class="btn" onclick="toast(\'处置记录（演示）\')">处置记录</button><button class="btn" onclick="toast(\'操作历史（演示）\')">操作历史</button><button class="btn" onclick="toast(\'导出（演示）\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(787,10,1)+'</div>';
+});
+
+/* ---------- 视图15：WebShell ---------- */
+regView('#/tlock/webshell',['威胁监测','WebShell'],function(){
+  var rows=[
+    ['d:\\jinher\\c6\\jhsoft.we…','420 B','6521d3174e8216514…','2022-08-06 15:54:59','2022-08-06 15:54:58'],
+    ['d:\\jinher\\c6\\jhsoft.we…','467 B','27a79d5d4263c4007…','2022-08-06 15:53:10','2022-08-06 15:53:10'],
+    ['d:\\jinher\\upload\\aspx…','1.13 KB','cca9c24ec2fada0b8b…','2022-08-06 15:47:29','2022-08-06 15:47:28'],
+    ['d:\\jinher\\c6\\jhsoft.we…','6.81 KB','2f672eb7dea29a015…','2022-08-06 00:03:55','2022-08-06 00:04:04'],
+    ['d:\\jinher\\c6\\jhsoft.we…','1.13 KB','913c7342708f3606f6…','2022-08-05 23:54:26','2022-08-05 23:54:27'],
+    ['d:\\jinher\\c6\\jhsoft.we…','3.05 KB','76bfbca88f82a034a7…','2022-08-05 23:50:13','2022-08-05 23:50:13'],
+    ['d:\\jinher\\c6\\jhsoft.we…','3.37 KB','bab2624e8e0077617…','2022-08-05 23:43:35','2022-08-05 23:44:01'],
+    ['d:\\jinher\\c6\\jhsoft.we…','3.37 KB','bab2624e8e0077617…','2022-08-05 23:43:35','2022-08-05 23:43:36'],
+    ['d:\\jinher\\c6\\jhsoft.we…','1.38 KB','15483797a68dad108…','2022-08-05 23:36:20','2022-08-05 23:36:21']
+  ];
+  var cols=[7,18,7,16,13,13,11,12,8];
+  var heads=['危险级别 <span class="sort">◆</span>','文件路径 <span class="sort">◆</span>','文件大小 <span class="sort">◆</span>','文件MD5','文件修改时间 <span class="sort">▼</span>','WebShell发现时间 <span class="sort">▼</span>','感染服务器','AgentID','IPv4'];
+  var body=rows.map(function(r){
+    return '<td><span class="tag tag-high">高危</span></td><td class="mono">'+r[0]+'</td><td>'+r[1]+'</td><td class="mono" style="color:#666">'+r[2]+'</td><td class="mono" style="color:#666">'+r[3]+'</td><td class="mono" style="color:#666">'+r[4]+'</td><td>'+osIcon('Win')+' WINDOWS-MDS-…</td><td class="mono" style="color:#666">c6d6eb55e1e8899a3c6f6…</td><td class="op-links"><span class="link" onclick="toast(\'已加白（演示）\')">加白</span><span class="link" onclick="openWebshellDetail()">详情</span><span style="color:#b6c0cb">…</span></td>';
+  }).join('</tr>');
+  return '<div class="panel">'+tabsBlock(['告警列表','扫描任务'],ST['ws']||'告警列表','ws')
+  +'<div class="toolbar"><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">批量操作</button><button class="btn" onclick="toast(\'白名单规则（演示）\')">白名单规则</button><button class="btn" onclick="toast(\'隔离列表（演示）\')">隔离列表</button><button class="btn" onclick="toast(\'导出（演示）\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(9,10,1)+'</div>';
+});
+
+/* 弹窗2：WebShell 告警详情 */
+function openWebshellDetail(){
+  openModal(mHead('告警详情')
+  +'<div class="m-body"><div style="font-size:17px;font-weight:700;color:#222">shell.asp</div><div class="m-title-sub">发生于：2022-08-06 15:54:58</div>'
+  +'<div class="dlg-tabs">'+[['基本信息',0],['静态说明',0],['动态信息',1]].map(function(t){return '<div class="dlg-tab'+(t[1]?' active':'')+'">'+t[0]+'</div>';}).join('')+'</div>'
+  +'<div class="tl">'
+  +'<div class="tl-node" style="border:none;background:none;width:34px;height:34px"><img src="assets/ys/tl-proc.png" style="height:34px;width:auto;object-fit:contain"></div>'
+  +'<div class="tl-label"><b style="color:#F5A623">进程 ▪▪▪▪</b></div>'
+  +'<div class="tl-line"></div>'
+  +'<div class="tl-card"><b>进程：</b><span class="val">C:\\Windows\\SysWOW64\\inetsrv\\w3wp.exe</span><br><b>进程id：</b><span class="val">5144</span><br><b>公司：</b><span class="val">Microsoft Corporation</span><br><b>类型：</b><span class="val">kernel</span><br><b>进程树：</b><span class="val">wininit.exe(NT AUTHORITY\\SYSTEM)(592)-&gt;services.exe(NT AUTHORITY\\SYSTEM)(688)-&gt;svchost.exe(NT AUTHORITY\\SYSTEM)(5308)-&gt;w3wp.exe(NT AUTHORITY\\NETWORK SERVICE)(5144)</span></div>'
+  +'<div class="tl-node" style="border:none;background:none;width:34px;height:34px"><img src="assets/ys/tl-op.png" style="height:34px;width:auto;object-fit:contain"></div>'
+  +'<div class="tl-label"><b style="color:#F5A623">操作 ▪▪▪▪</b></div>'
+  +'<div class="tl-line"></div>'
+  +'<div class="tl-card hot"><b>操作：</b><span class="val">create_file</span><br><b>操作描述：</b><span class="val">创建文件</span></div>'
+  +'<div class="tl-node" style="border:none;background:none;width:34px;height:34px"><img src="assets/ys/tl-obj.png" style="height:34px;width:auto;object-fit:contain"></div>'
+  +'<div class="tl-label"><b style="color:#F5A623">操作对象</b></div>'
+  +'<div class="tl-card"><b>文件：</b><span class="val">d:\\jinher\\c6\\jhsoft.web.vehicle\\shell.asp</span><br><b>文件hash：</b><span class="val">50bd8eafc02009826f8b40128920e7711948f06ecf0c945389692d3c34c30715</span></div>'
+  +'</div></div>');
+}
+
+/* ---------- 视图16：反弹shell ---------- */
+regView('#/tlock/reverse-shell',['威胁监测','反弹shell'],function(){
+  var rows=[
+    ['2022-08-07 06:15:47','10.0.2.138','db10new.sinoste…','db10测试数据库','6efb6c1ba4503…','10.0.3.61','10.0.2.138','fe80::250:56ff:feb7:6…'],
+    ['2022-08-07 06:00:34','10.0.2.138','db10new.sinoste…','db10测试数据库','6efb6c1ba4503…','10.0.3.61','10.0.2.138','fe80::250:56ff:feb7:6…'],
+    ['2022-08-07 05:45:28','10.0.2.138','db10new.sinoste…','db10测试数据库','6efb6c1ba4503…','10.0.3.61','10.0.2.138','fe80::250:56ff:feb7:6…'],
+    ['2022-08-03 16:52:40','10.0.3.101','zgwireless','无线管理imc','ee1820c28a90…','10.29.0.13','10.0.3.101','fe80::13b5:3689:f7b9…'],
+    ['2022-08-01 16:17:00','172.18.0.1','VM_0_2_centos','制品院-质检中心电商…','2f3dc40355fb7…','106.11.35.100','139.199.20.205,172.…','fe80::42:abff:fef2:ffde'],
+    ['2022-08-01 14:17:46','172.17.110.42','iZ2ze1oaeuu3wp…','制品院-质检中心财务…','e1a37eef09463…','218.28.24.36','127.0.0.1,172.17.110…','--'],
+    ['2022-07-31 06:15:33','10.0.2.138','db10new.sinoste…','db10测试数据库','6efb6c1ba4503…','10.0.3.61','10.0.2.138','fe80::250:56ff:feb7:6…'],
+    ['2022-07-31 05:59:12','10.0.2.138','db10new.sinoste…','db10测试数据库','6efb6c1ba4503…','10.0.3.61','10.0.2.138','fe80::250:56ff:feb7:6…'],
+    ['2022-07-31 05:51:34','10.0.2.138','db10new.sinoste…','db10测试数据库','6efb6c1ba4503…','10.0.3.61','10.0.2.138','fe80::250:56ff:feb7:6…'],
+    ['2022-07-31 05:29:05','10.0.2.138','db10new.sinoste…','db10测试数据库','6efb6c1ba4503…','10.0.3.61','10.0.2.138','fe80::250:56ff:feb7:6…'],
+    ['2022-07-28 16:12:54','172.18.0.1','iZ2ze1oaeuu3wp…','制品院-质检中心外检','0dc56c32a6d9d…','101.200.56.76','10.42.0.0,101.200.56…','--'],
+    ['2022-07-28 10:39:13','10.0.2.20','mailarch.sinoste…','邮件归档','0be06fcc3d95b…','10.0.5.11','10.0.2.20','fe80::250:56ff:feb3:3…']
+  ];
+  var cols=[11,10,12,12,10,8,11,12,5,9];
+  var heads=['发现时间 <span class="sort">▼</span>','发起连接主机','服务器名称','服务器别名','AgentID','服务器IP','IPv4','IPv6','操作系统','操作'];
+  var body=rows.map(function(r){
+    return '<td class="mono" style="color:#666">'+r[0]+'</td><td class="mono">'+r[1]+'</td><td>'+osIcon('Linux')+' '+r[2]+'</td><td>'+r[3]+'</td><td class="mono" style="color:#666">'+r[4]+'</td><td class="mono">'+r[5]+'</td><td class="mono" style="color:#666">'+r[6]+'</td><td class="mono" style="color:#666">'+r[7]+'</td><td>Linux</td><td class="op-links"><span class="link" onclick="toast(\'进程阻断（演示）\')">进程阻断</span><span class="link" onclick="toast(\'已加白（演示）\')">加白</span><span class="link" onclick="openRsshDetail()">详情</span></td>';
+  }).join('</tr>');
+  return '<div class="panel"><div class="toolbar"><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">批量操作</button><button class="btn" onclick="toast(\'白名单规则（演示）\')">白名单规则</button><button class="btn" onclick="toast(\'告警设置（演示）\')">告警设置</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(160,15,1)+'</div>';
+});
+
+/* 弹窗3：反弹shell 查看详情 */
+function openRsshDetail(){
+  function row(k1,v1,k2,v2){return '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:7px 0;color:#666"><span>'+k1+'：<b style="color:#333">'+v1+'</b></span><span>'+k2+'：<b style="color:#333">'+v2+'</b></span></div>';}
+  openModal(mHead('查看详情')
+  +'<div class="m-body"><div style="font-size:15px;font-weight:700;color:#222">发起连接主机：<span class="mono" style="color:#1296DB">172.18.0.1</span></div><div class="m-title-sub">发生于：2022-08-01 16:17:00</div>'
+  +'<div class="dlg-tabs">'+[['基本信息',0],['连接进程信息',1],['进程树',0]].map(function(t){return '<div class="dlg-tab'+(t[1]?' active':'')+'">'+t[0]+'</div>';}).join('')+'</div>'
+  +row('连接进程','uwsgi','运行用户','root')
+  +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:7px 0;color:#666"><span>进程路径：<b class="val" style="font-family:Consolas,monospace;color:#1296DB">/www/pyweb/work2.0/work2.0_venv/bin/uwsgi</b></span><span>用户组：<b style="color:#333">root</b></span></div>'
+  +row('父进程','uwsgi','父进程路径','<span style="font-family:Consolas,monospace;color:#1296DB">/www/pyweb/work2.0/work2.0_venv/bin/uwsgi</span>')
+  +'</div>');
+}
+
+/* ---------- 视图17：本地提权 ---------- */
+regView('#/tlock/privesc',['威胁监测','本地提权'],function(){
+  var times=['2022-08-08 01:24:46','2022-08-08 01:24:46','2022-08-08 01:24:46','2022-08-08 00:24:46','2022-08-07 23:24:46','2022-08-07 23:24:46','2022-08-07 23:24:46','2022-08-07 22:24:46','2022-08-07 22:24:46','2022-08-07 22:24:46','2022-08-07 21:24:46','2022-08-07 21:24:46','2022-08-07 21:24:46'];
+  var cols=[12,13,13,11,8,8,12,6,7,10];
+  var heads=['发现时间 <span class="sort">▼</span>','服务器名称','服务器别名','AgentID','服务器IP','IPv4','IPv6','操作系统','所属分组','操作'];
+  var body=times.map(function(t){
+    return '<td class="mono" style="color:#666">'+t+'</td><td>'+osIcon('Linux')+' amstest.sinosteel…</td><td>档案系统测试环境</td><td class="mono" style="color:#666">625a3a5fd562d…</td><td class="mono">10.0.26.253</td><td class="mono" style="color:#666">10.0.26.253</td><td class="mono" style="color:#666">fe80::250:56ff:feb3:5d8</td><td>Linux</td><td>未分组</td><td class="op-links"><span class="link" onclick="toast(\'进程阻断（演示）\')">进程阻断</span><span class="link" onclick="toast(\'已加白IP（演示）\')">加白IP</span><span class="link" onclick="toast(\'告警详情（演示）\')">详情</span></td>';
+  }).join('</tr>');
+  return '<div class="panel"><div class="toolbar"><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">批量操作</button><button class="btn" onclick="toast(\'白名单规则（演示）\')">白名单规则</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(5055,15,1)+'</div>';
+});
+
+/* ---------- 视图18：无文件攻击 ---------- */
+regView('#/tlock/fileless',['威胁监测','无文件攻击'],function(){
+  var rows=[
+    ['2022-07-28 10:04:25','执行命令','30002','异常调用脚本引…','中钢天源股份有限公司…','10.131.8.20'],
+    ['2022-07-28 10:01:02','执行命令','30002','异常调用脚本引…','中钢天源股份有限公司…','172.28.178.7'],
+    ['2022-07-24 07:52:02','脚本执行','31022','混淆的powershell…','中钢天澄设计管理平台','10.142.2.50'],
+    ['2022-07-24 07:52:02','脚本执行','31022','混淆的powershell…','中钢天澄设计管理平台','10.142.2.50'],
+    ['2022-07-24 07:52:02','脚本执行','31022','混淆的powershell…','中钢天澄设计管理平台','10.142.2.50'],
+    ['2022-07-24 07:52:02','脚本执行','31022','混淆的powershell…','中钢天澄设计管理平台','10.142.2.50'],
+    ['2022-07-23 21:37:54','脚本执行','31022','混淆的powershell…','中钢天澄设计管理平台','10.142.2.50'],
+    ['2022-07-21 19:10:30','脚本执行','31022','混淆的powershell…','中钢天澄设计管理平台','10.142.2.50'],
+    ['2022-07-13 08:50:07','执行命令','30002','异常调用脚本引…','中钢天源股份有限公司…','172.28.178.7'],
+    ['2022-07-13 08:50:04','执行命令','30002','异常调用脚本引…','中钢天源股份有限公司…','172.28.178.7']
+  ];
+  var cols=[11,16,9,7,14,8,15,9,8,12];
+  var heads=['发现时间 <span class="sort">▼</span>','告警进程','告警类型 <span class="sort">▼</span>','规则ID','规则描述','风险等级','服务器别名','服务器IP','处置状态','操作'];
+  var body=rows.map(function(r){
+    return '<td class="mono" style="color:#666">'+r[0]+'</td><td class="mono">C:\\Windows\\syst…</td><td>'+r[1]+'</td><td class="mono">'+r[2]+'</td><td>'+r[3]+'</td><td><span class="tag tag-crit">危急</span></td><td>'+r[4]+'</td><td class="mono">'+r[5]+'</td><td>未处理</td><td class="op-links"><span class="link" onclick="toast(\'已加白（演示）\')">加白</span><span class="link" onclick="toast(\'告警详情（演示）\')">详情</span><span style="color:#b6c0cb">…</span></td>';
+  }).join('</tr>');
+  return '<div class="panel">'+tabsBlock(['告警列表','设置'],ST['fl']||'告警列表','fl')
+  +'<div class="toolbar"><button class="btn" onclick="toast(\'白名单管理（演示）\')">白名单管理</button><button class="btn" onclick="toast(\'导出（演示）\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(476,10,1)+'</div>';
+});
+
+/* ---------- 视图19：RCE利用 ---------- */
+regView('#/tlock/rce',['威胁监测','RCE利用'],function(){
+  var rows=[
+    ['2022-08-06 14:30:53','IIS服务执行敏…','10.0.11.1','--','*','--'],
+    ['2022-08-05 22:40:10','IIS服务执行敏…','10.0.11.1','--','*','--'],
+    ['2022-08-05 22:37:14','IIS服务执行敏…','10.0.11.1','--','*','config workstation'],
+    ['2022-08-05 22:35:17','IIS服务执行敏…','10.0.11.1','--','*','time /domain'],
+    ['2022-08-05 22:32:00','IIS服务执行网…','10.0.11.1','--','*','114.114.114.114'],
+    ['2022-08-05 22:30:07','IIS服务执行网…','10.0.11.1','--','*','www.baidu.com'],
+    ['2022-08-05 22:27:33','IIS服务执行敏…','10.0.11.1','--','*','-a'],
+    ['2022-08-05 22:27:24','IIS服务执行敏…','10.0.11.1','--','*','user'],
+    ['2022-08-05 09:57:57','服务执行tasklist…','10.142.2.50','explorer.exe','8801','-h 10.142.11.1/16 -m …'],
+    ['2022-08-05 09:55:39','服务执行tasklist…','10.142.2.50','explorer.exe','8801','-h 10.111.1.1/16'],
+    ['2022-08-05 09:48:51','服务执行tasklist…','10.142.2.50','explorer.exe','8801','-h 10.142.0.1/8 -m icmp'],
+    ['2022-08-05 09:48:29','服务执行tasklist…','10.142.2.50','explorer.exe','8801','-h 10.142.0.1/16 -m ic…'],
+    ['2022-08-05 09:48:02','服务执行tasklist…','10.142.2.50','explorer.exe','8801','-h 10.0.0.1/8 -m icmp']
+  ];
+  var cols=[11,18,12,8,9,11,6,10,9,9];
+  var heads=['发现时间 <span class="sort">▼</span>','检测说明 <span class="sort">◆</span>','命中规则 <span class="sort">◆</span>','主机IP <span class="sort">◆</span>','服务名 <span class="sort">◆</span>','服务路径 <span class="sort">▼</span>','端口号 <span class="sort">◆</span>','执行命令 <span class="sort">◆</span>','参数 <span class="sort">◆</span>','操作'];
+  var body=rows.map(function(r,i){
+    return '<td class="mono" style="color:#666">'+r[0]+'</td><td class="mono link" onclick="openRCEModal(\'det\')">C:\\Windows\\SysWOW64\\inetsrv…</td><td>'+r[1]+'</td><td class="mono">'+r[2]+'</td><td>'+r[3]+'</td><td class="mono" style="color:#1296DB;cursor:pointer" onclick="openRCEModal(\'base\')">C:\\Windows\\Sy…</td><td class="mono">'+r[4]+'</td><td class="mono">C:\\Windows\\Sy…</td><td class="mono">'+r[5]+'</td><td class="op-links"><span class="link" onclick="toast(\'已加白（演示）\')">加白</span><span class="link" onclick="openRCEModal(\'det\')">详情</span><span class="link" onclick="toast(\'事件追溯（演示）\')">追溯</span></td>';
+  }).join('</tr>');
+  return '<div class="panel"><div class="toolbar"><button class="btn" onclick="toast(\'白名单管理（演示）\')">白名单管理</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">删除</button><button class="btn" onclick="toast(\'导出（演示）\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(55433,15,1)+'</div>';
+});
+
+/* 弹窗4：RCE 告警详情（4 tab） */
+function rceTabsHtml(active){
+  return '<div class="dlg-tabs" style="border:none;margin:6px 0 16px">'+[['基础信息','base'],['检测说明','det'],['动态信息','dyn'],['进程树','tree']].map(function(t){return '<div class="dlg-tab'+(active===t[1]?' active':'')+'" onclick="openRCEModal(\''+t[1]+'\')" style="border-bottom:1px solid #eee;margin-bottom:0;padding-bottom:12px">'+t[0]+'</div>';}).join('')+'</div>';
+}
+function openRCEModal(tab){
+  var body='';
+  if(tab==='det'){
+    body='<div style="font-weight:600;color:#333;margin-bottom:8px;border-left:3px solid #0C95E7;padding-left:8px">检测规则：</div>'
+    +'<table class="grid" style="margin-bottom:16px"><thead><tr><th style="width:34%"></th><th></th><th></th></tr></thead><tbody><tr><td style="color:#666">规则ID</td><td style="color:#666">命中规则</td><td style="color:#666">规则描述</td></tr><tr><td class="mono">RCE_131</td><td>IIS服务执行敏感命令</td><td>IIS服务执行敏感命令</td></tr></tbody></table>'
+    +'<div style="font-weight:600;color:#333;margin-bottom:8px;border-left:3px solid #0C95E7;padding-left:8px">检测描述：</div>'
+    +'<div class="mono" style="color:#1296DB;line-height:1.9">C:\\Windows\\SysWOW64\\inetsrv\\w3wp.exe:*服务执行异常命令，命令内容为：<br>C:\\Windows\\SysWOW64\\systeminfo.exe</div>';
+  }else if(tab==='dyn'){
+    body='<div class="tl">'
+    +'<div class="tl-node" style="border:none;background:none;width:34px;height:34px"><img src="assets/ys/tl-proc.png" style="height:34px;width:auto;object-fit:contain"></div><div class="tl-label"><b style="color:#F5A623">进程 ▪▪▪▪</b></div><div class="tl-line"></div>'
+    +'<div class="tl-card hot"><b>用户：</b><span class="val">NT AUTHORITY\\NETWORK SERVICE</span><br><b>进程：</b><span class="val">C:\\Windows\\SysWOW64\\cmd.exe</span><br><b>进程id：</b><span class="val">134192</span><br><b>公司：</b><span class="val">Microsoft Corporation</span><br><b>类型：</b><span class="val">kernel</span><br><b>进程树：</b><span class="val">wininit.exe(556)&gt;services.exe(652)&gt;svchost.exe(4668)&gt;w3wp.exe(116548)&gt;cmd.exe(134192)</span></div>'
+    +'<div class="tl-node" style="border:none;background:none;width:34px;height:34px"><img src="assets/ys/tl-op.png" style="height:34px;width:auto;object-fit:contain"></div><div class="tl-label"><b style="color:#F5A623">操作 ▪▪▪▪</b></div><div class="tl-line"></div>'
+    +'<div class="tl-card"><b>操作：</b><span class="val">create_proc</span><br><b>操作描述：</b><span class="val">创建进程</span></div>'
+    +'<div class="tl-node" style="border:none;background:none;width:34px;height:34px"><img src="assets/ys/tl-obj.png" style="height:34px;width:auto;object-fit:contain"></div><div class="tl-label"><b style="color:#F5A623">操作对象</b></div>'
+    +'<div class="tl-card"><b>进程：</b><span class="val">C:\\Windows\\SysWOW64\\systeminfo.exe</span><br><b>进程id：</b><span class="val">133724</span></div>'
+    +'</div>';
+  }else if(tab==='tree'){
+    body='<div class="ptree"><div class="ptree-left">'
+    +'<div class="pnode">w3wp.exe</div><div class="parrow"></div>'
+    +'<div class="pnode">cmd.exe</div><div class="parrow"></div>'
+    +'<div class="pnode bad">systeminfo.exe</div>'
+    +'</div><div class="ptree-detail">'
+    +'<b>进程用户：</b>NETWORK SERVICE<br><b>进程路径：</b><span class="val">C:\\Windows\\SysWOW64\\inetsrv\\w3wp.exe</span><br><b>PID：</b>116548　<b>父进程PID：</b>4668<br><b>服务类型：</b>WebServer<br><b>命令行：</b><span class="val">-ap "C6" -v "v2.0" -l "webengine4.dll" -a \\.\pipe\iisipm3683e2b6-5824-4f4f-aa00-f05fc0dd2608 -h "C:\inetpub\temp\apppools\C6\C6.config" -w "" -m 1 -t 20</span><br><br>'
+    +'<b>进程用户：</b>NETWORK SERVICE<br><b>进程路径：</b><span class="val">C:\\Windows\\SysWOW64\\cmd.exe</span><br><b>PID：</b>134192　<b>父进程PID：</b>116548<br><b>命令行：</b><span class="val">/c "cd /d "D:/JINHER/C6/Jhsoft.Web.vehicle/DownLoad/"&amp;systeminfo" 2&gt;&amp;1</span><br><br>'
+    +'<b>进程用户：</b>NETWORK SERVICE<br><b>进程路径：</b><span class="val">C:\\Windows\\SysWOW64\\systeminfo.exe</span><br><b>PID：</b>133724　<b>父进程PID：</b>134192<br><b class="bad">命令行：</b>'
+    +'</div></div>';
+  }else{
+    body='<table class="grid"><tbody>'
+    +[['发现时间','2022-08-06 14:30:53'],['主机IP','10.0.11.1'],['服务名','--'],['服务路径','C:\\Windows\\SysWOW64\\inetsrv\\w3wp.exe'],['端口号','*'],['执行命令','C:\\Windows\\SysWOW64\\systeminfo.exe'],['参数','--']]
+    .map(function(r){return '<tr><td style="width:120px;background:#F5F6F8;color:#666">'+r[0]+'</td><td class="mono">'+r[1]+'</td></tr>';}).join('')
+    +'</tbody></table>';
+  }
+  openModal(mHead('RCE告警详情')
+  +'<div class="m-body"><div style="font-size:15px;font-weight:700;color:#222">RCE利用</div><div class="m-title-sub">发生于：2022-08-06 14:30:53</div>'
+  +rceTabsHtml(tab)+body+'</div>');
+}
+
+/* ---------- 视图20：日志分析 ---------- */
+regView('#/tlock/log-analysis',['分析中心','日志分析'],function(){
+  return '<div class="bigsearch"><div class="box"><input placeholder="请输入关键字查询"><div class="icons"><img src="assets/ys/ico-search.png"></div></div></div>'
+  +'<div class="search-links" style="padding-right:16px"><span class="g" onclick="toast(\'已清空查询条件（演示）\')">清空条件</span><span class="g" onclick="toast(\'已返回上次筛选（演示）\')">返回上次筛选</span><span class="b" onclick="toast(\'语法查询帮助（演示）\')"><img src="assets/ys/ico-syntax.png" style="height:16px;width:auto;object-fit:contain">语法查询</span></div>'
+  +'<div style="padding:14px 16px 0;display:flex;align-items:center"><button class="btn btn-p" onclick="toast(\'日志白名单（演示）\')">日志白名单</button><button class="btn btn-p" style="margin-left:10px" onclick="toast(\'导出日志（演示）\')">导出</button><span style="flex:1"></span><span style="color:#555;font-size:13px">全量行为记录开关　<span class="sw on" onclick="this.classList.toggle(\'on\')"></span></span></div>'
+  +'<div class="filterbar"><div style="color:#555;font-size:13px">为您找到相关结果共 <span class="rr">29146</span> 条</div>'
+  +'<div style="display:flex;gap:14px;align-items:center;color:#666;font-size:13px"><span class="g" style="cursor:pointer" onclick="toast(\'已切换为最近半月（演示）\')">最近半月</span><span style="cursor:pointer" onclick="toast(\'已切换为最近一周（演示）\')">最近一周</span><span class="link" style="font-weight:600" onclick="toast(\'已切换为今天（演示）\')">今天</span><span style="border:1px solid #d9dee5;border-radius:4px;padding:5px 12px;color:#666" class="mono">2022-08-08 00:00:00　-　2022-08-08 23:59:59</span></div></div>'
+  +'<div class="log-layout"><div>'
+  +'<div style="background:#fff;border-radius:6px;padding:10px 14px 4px;box-shadow:0 1px 3px rgba(30,60,90,.06)"><div class="chart-box" id="ch-log" style="height:200px"></div></div>'
+  +'<div style="height:12px"></div>'
+  +'<div class="log-card"><span class="pill">ISA防火墙B</span><span class="pill gray">1892ccc2a6…</span><span class="pill gray">10.0.21.3</span><span class="pill bluefill">系统登录</span><span class="pill purple">一般</span><span class="pill">登录失败</span><span style="float:right;color:#9aa5b1;font-size:12px">2022-08-08 01:56:31　将此条日志　<span class="link" onclick="toast(\'不再记录该日志（演示）\')">不再记录</span>　<span class="link" onclick="toast(\'日志详情（演示）\')">查看详情</span></span>'
+  +'<div class="log-body"><span class="mono" style="color:#1296DB">10.0.21.50</span> 局域网（计算机名 ISA2K6B）使用账号 <b>radmoont</b> 远程登录服务器 <span class="mono" style="color:#1296DB">10.0.21.3</span>。来源：<span class="src">系统登录审计</span></div></div>'
+  +'<div class="log-card"><span class="pill gray">IZn8d0np6g…</span><span class="pill gray">2a9cd43abe…</span><span class="pill gray">172.17.231…</span><span class="pill bluefill">进程操作</span><span class="pill purple">一般</span><span class="pill">未拦截</span><span style="float:right;color:#9aa5b1;font-size:12px">2022-08-08 01:56:28　将此条日志　<span class="link" onclick="toast(\'不再记录该日志（演示）\')">不再记录</span>　<span class="link" onclick="toast(\'日志详情（演示）\')">查看详情</span></span>'
+  +'<div class="log-body">进程 <span class="mono" style="color:#1296DB">C:\\Windows\\System32\\wbem\\WmiPrvSE.exe</span> 对 <span class="mono" style="color:#1296DB">C:\\Windows\\System32\\lsass.exe</span> 进行…。来源：<span class="src">进程操作监控</span></div></div>'
+  +'</div>'
+  +'<div class="log-side">'
+  +'<div class="grp"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;color:#333;font-size:13px"><span>目标服务器</span><span style="display:flex;gap:10px;color:#9aa5b1;font-size:12px">排序 收起</span></div>'
+  +[['天擎',3097],['中钢外网前台',2647],['中钢招标官网服务器',2506],['邮件网关',2065],['制品院-质检中心精密',1776]].map(function(r){return '<div class="srow"><span>'+r[0]+'</span><span class="num">'+r[1]+'</span></div>';}).join('')
+  +'<div class="srow" style="border:none"><span class="link" onclick="toast(\'已显示全部服务器（演示）\')">全部</span><span class="link" onclick="toast(\'已确认（演示）\')">确认</span></div></div>'
+  +'<div class="grp"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;color:#333;font-size:13px"><span>网络行为日志</span><span style="color:#9aa5b1;font-size:12px">排序 收起</span></div>'
+  +[['外网暴露',7404],['内网暴露',3169],['连接',1066],['添加监听',740]].map(function(r){return '<div class="srow"><span>'+r[0]+'</span><span class="num">'+r[1]+'</span></div>';}).join('')+'</div>'
+  +'<div class="grp"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;color:#333;font-size:13px"><span>进程操作日志</span><span style="display:flex;gap:10px;color:#9aa5b1;font-size:12px"><span class="link" onclick="toast(\'已确认（演示）\')">确认</span>排序 收起</span></div>'
+  +'<div class="srow"><span>创建进程</span><span class="num">11562</span></div></div>'
+  +'</div></div>';
+},function(){
+  initChart(document.getElementById('ch-log'),{
+    grid:{left:44,right:16,top:16,bottom:24},
+    xAxis:{type:'category',data:['00:00','01:00'],axisTick:{show:false},axisLine:{lineStyle:{color:'#ddd'}},axisLabel:{color:'#999'}},
+    yAxis:{type:'value',max:18000,splitLine:{lineStyle:{color:'#f0f2f5'}},axisLabel:{color:'#999',fontSize:10}},
+    series:[{type:'bar',barWidth:26,data:[17000,12000],itemStyle:{color:'#0C95E7',borderRadius:[3,3,0,0]}}]
+  });
+});
+
+/* ---------- 视图21：功能设置 ---------- */
+regView('#/tlock/func-setting',['安全防护','功能设置'],function(){
+  var rows=[
+    ['Linux','rancher-node1','制品院-质检中心liims…','未安装','0 / 0','04b0b458b335…','172.1'],
+    ['Linux','extinfo.sinosteel…','--','已安装','0 / 1','089f7a16e6ff31…','10.0.'],
+    ['Linux','ACS5-6','ACS5-6','已安装','0 / 4','0ad7272d601c…','10.0.'],
+    ['Linux','IZ2ze1oaeuu3wp…','制品院-质检中心外检','已安装','0 / 5','0dc56c32a6d9d…','172.1'],
+    ['Linux','localhost.localdo…','国密监管前置机','已安装','8 / 1','0fd1334c0b527…','10.90'],
+    ['Win','IZpyonup69affZ','制品院-质检中心中岩…','已安装','0 / 2','11dba5d5a7fa9…','172.1'],
+    ['Linux','localhost.localdomain','冶金资源ERP正式环境','已安装','0 / 1','150367cff1d743…','10.0.'],
+    ['Linux','localhost.localdo…','实业项目投资系统','已安装','0 / 1','168709015aab…','10.0.'],
+    ['Linux','localhost.localdo…','中钢测试系统','已安装','0 / 0','16e7cf6188cf9…','10.0.'],
+    ['Linux','IZ2zeh8vajx1j1fvf…','制品院-质检中心liims','已安装','0 / 0','17e1c3344749…','172.1'],
+    ['Win','ISA2K6B','ISA防火墙B','已安装','0 / 0','1892ccc2a6ac8…','10.0.'],
+    ['Linux','netsrvin1.sinoste…','无线DHCP','已安装','0 / 0','1e39693e2b79…','10.0.'],
+    ['Win','IZy0064e07opmbZ','中钢招标官网服务器','已安装','1 / 0','1eb608d7dfdf9…','172.3']
+  ];
+  var cols=[12,6,7,13,8,6,11,7,8,9,13];
+  var heads=['服务器名称','操作系统','服务器状态 <span class="sort">▼</span>','服务器别名','驱动状态 <span class="sort">◆</span>','插件状态','AgentID <span class="sort">◆</span>','所属分组','隔离状态 <span class="sort">▼</span>','IPv4','操作'];
+  var body=rows.map(function(r){
+    return '<td>'+osIcon(r[0])+' '+r[1]+'</td><td>'+r[0]+'</td><td class="online">在线</td><td>'+r[2]+'</td><td>'+r[3]+'</td><td class="link" style="font-weight:600" onclick="toast(\'插件状态详情（演示）\')">'+r[4]+'</td><td class="mono" style="color:#666">'+r[5]+'</td><td>--</td><td>未隔离</td><td class="mono">'+r[6]+'…</td><td class="op-links"><span class="link" onclick="toast(\'功能设置（演示）\')">功能设置</span><span class="link" onclick="toast(\'RUNLOG下载（演示）\')">RUNLOG下载</span></td>';
+  }).join('</tr>');
+  return '<div class="panel"><div class="toolbar"><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">批量设置</button><button class="btn" onclick="toast(\'下发管理（演示）\')">下发管理</button><button class="btn" onclick="toast(\'模板管理（演示）\')">模板管理</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">生成模板</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">同步配置</button><button class="btn" onclick="toast(\'导出（演示）\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'
+  +'<div style="display:flex;align-items:center;gap:16px;padding:0 16px;color:#666;font-size:13px"><label><input type="checkbox" class="chk"> 全选</label><label><input type="checkbox" class="chk"> 反选</label><span>共有相关信息 <b class="link" style="font-size:14px" onclick="toast(\'相关服务器列表（演示）\')">131</b> / 已选 <b style="color:#F0483E">0</b></span></div>'
+  +pager(131,15,1)+'</div>';
+});
+
+/* ---------- 视图22：更新管理 ---------- */
+regView('#/tlock/update',['安全防护','更新管理'],function(){
+  var rows=[
+    ['Win','WIN-KBLHMJLJ…','金属矿山杂志（…','2022-07-01 14:34:04','win_8.0.5.1062'],
+    ['Win','YICAITONG','一采通服务器','2022-07-19 10:18:35','win_8.0.5.1062'],
+    ['Win','SSCITRIX','CITRIX正式环境','2022-06-26 23:16:42','win_8.0.5.1062'],
+    ['Linux','sinosteelCDP3','灾备CDP3','2022-06-24 22:01:42','linux_8.0.5.1065'],
+    ['Win','ECS-ZGHJWEB','中钢衡机天翼云…','2022-06-30 10:20:08','win_8.0.5.1062'],
+    ['Win','SC-SINOSTL','--','2022-07-21 16:55:54','win_8.0.5.1062']
+  ];
+  var cols=[13,13,8,8,13,12,12,8,6,6];
+  var heads=['服务器名称 <span class="sort">◆</span>','服务器别名','在线状态 <span class="sort">▼</span>','所属分组 <span class="sort">▼</span>','Agent安装时间 <span class="sort">◆</span>','当前Agent版本 <span class="sort">▼</span>','最新Agent版本 <span class="sort">◆</span>','Agent类型 <span class="sort">▼</span>','启动时间 <span class="sort">◆</span>','结束时间'];
+  var body=rows.map(function(r){
+    return '<td>'+osIcon(r[0])+' '+r[1]+'</td><td>'+r[2]+'</td><td class="offline">离线</td><td>--</td><td class="mono" style="color:#666">'+r[3]+'</td><td class="mono">'+r[4]+'</td><td class="mono">'+(r[0]==='Linux'?'linux':'win')+'_8.0.1.0</td><td>增强版</td><td>--</td><td>--</td>';
+  }).join('</tr>');
+  return '<div class="chart-row" style="padding-top:14px;grid-template-columns:1fr 1fr"><div class="chart-card" style="height:230px"><h4 style="display:flex;justify-content:space-between">Agent版本分布<span style="color:#b6c0cb;font-weight:400">↻</span></h4><div class="chart-box" id="ch-ver" style="height:180px"></div></div>'
+  +'<div class="chart-card" style="height:230px"><h4 style="display:flex;justify-content:space-between">可升级版本占比<span style="color:#b6c0cb;font-weight:400">↻</span></h4><div class="chart-box" id="ch-upg" style="height:180px"></div></div></div>'
+  +'<div class="panel"><div class="toolbar"><button class="btn btn-p" onclick="toast(\'已同步（演示）\')">同步</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">版本更新</button><button class="btn" onclick="toast(\'图表显隐（演示）\')">图表显隐</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'
+  +'<div style="display:flex;align-items:center;gap:16px;padding:0 16px;color:#666;font-size:13px"><label><input type="checkbox" class="chk"> 全选</label><label><input type="checkbox" class="chk"> 反选</label><span>共有相关信息 <b class="link" style="font-size:14px" onclick="toast(\'相关服务器列表（演示）\')">131</b> / 已选 <b style="color:#F0483E">0</b></span></div>'
+  +pager(131,10,1)+'</div>';
+},function(){
+  initChart(document.getElementById('ch-ver'),{
+    tooltip:{trigger:'item'},
+    legend:{right:0,top:'middle',orient:'vertical',icon:'rect',itemWidth:10,itemHeight:10,textStyle:{fontSize:11,color:'#666'}},
+    title:{text:'48.85%',subtext:'win_8.0.5.1062',left:'30%',top:'38%',textStyle:{fontSize:20,color:'#333'},subtextStyle:{fontSize:11,color:'#999'}},
+    series:[{type:'pie',radius:['58%','78%'],center:['30%','50%'],label:{show:false},
+      data:[{value:2,name:'linux_8.0.5.5056',itemStyle:{color:'#4A9FE8'}},{value:64,name:'win_8.0.5.1062',itemStyle:{color:'#22D3C5'}},{value:65,name:'linux_8.0.5.1065',itemStyle:{color:'#9B7FE0'}}]}]
+  });
+  initChart(document.getElementById('ch-upg'),{
+    tooltip:{trigger:'item'},
+    legend:{right:0,top:'middle',orient:'vertical',icon:'rect',itemWidth:10,itemHeight:10,textStyle:{fontSize:11,color:'#666'}},
+    title:{text:'0%',subtext:'可升级',left:'30%',top:'38%',textStyle:{fontSize:20,color:'#333'},subtextStyle:{fontSize:11,color:'#999'}},
+    series:[{type:'pie',radius:['58%','78%'],center:['30%','50%'],label:{show:false},
+      data:[{value:131,name:'无需升级',itemStyle:{color:'#0C95E7'}},{value:0,name:'可升级',itemStyle:{color:'#22D3C5'}}]}]
+  });
+});
+
+/* ---------- 视图23：性能监控 ---------- */
+regView('#/tlock/performance',['安全运维','性能监控'],function(){
+  var rows=[
+    ['Linux','localhost.localdo…','中钢测试系统','16e7cf6188cf9…','127.0.0.1,10.0.6…','3.40%','1.50%'],
+    ['Win','IZm9608nqm7w2…','制品院-质检中…','333e05e53502…','172.17.110.20,5…','0.47%','0.15%'],
+    ['Win','SINOSTEE-60E8…','SSLLOG','48aa48db09c8…','10.0.21.33','0.04%','1.24%'],
+    ['Win','ADMINISTRATOR','机房监控系统','5addda085cea…','10.0.7.235','1.24%','1.02%'],
+    ['Linux','db10new.sinoste…','db10测试数据库','6efb6c1ba4503…','10.0.2.138','2.00%','1.00%'],
+    ['Win','WIN-PH5JN1KT…','天擎','79cd5fe6f7564…','10.0.6.103','0.51%','0.22%'],
+    ['Win','SSPM1','VSS文档服务器','89f07b597c368…','10.0.21.21','0.12%','0.24%'],
+    ['Linux','sinosteelCDP2','灾备CDP2','90c408668cb4d…','10.0.2.159','3.10%','2.50%'],
+    ['Win','zgjcpdf','制品院-质检中…','c79960472e2d…','172.17.110.22,3…','0.39%','0.77%'],
+    ['Linux','localhost.localdo…','图纸打印服务器','d24091ddf5941…','127.0.0.1,10.0.1…','2.50%','1.50%'],
+    ['Win','ZGSJZSJY','ZGSJZWEB','e713899841e0…','172.17.230.4…','1.95%','1.03%'],
+    ['Linux','gzjgap.sinosteel…','国资监管ap正式','e940aecd2fb51…','10.0.3.59','5.50%','0.50%'],
+    ['Win','SINOSTEEL-SS…','SSLAPP','eff9a31eb92c7f…','10.0.21.35','0.08%','0.89%']
+  ];
+  var cols=[11,11,11,9,11,6,7,8,11,11];
+  var heads=['服务器名称 <span class="sort">◆</span>','服务器别名','AgentID','IPv4','IPv6','所属部门','所属分组','Agent性能保护','Agent Cpu利用率','Agent内存使用'];
+  var body=rows.map(function(r,i){
+    var tr='<img src="assets/ys/trend-up.png" style="height:16px;width:auto;object-fit:contain;vertical-align:-2px;margin-left:3px">';
+    return '<td>'+osIcon(r[0])+' '+r[1]+'</td><td>'+r[2]+'</td><td class="mono" style="color:#666">'+r[3]+'</td><td class="mono">'+r[4]+'</td><td class="mono" style="color:#666">fe80::…</td><td>--</td><td>未分组</td><td class="online">开启</td><td class="link" style="font-weight:700" onclick="toast(\'CPU趋势详情（演示）\')">'+r[5]+tr+'</td><td class="link" style="font-weight:700" onclick="toast(\'内存趋势详情（演示）\')">'+r[6]+tr+'</td>';
+  }).join('</tr>');
+  return '<div class="panel"><div class="toolbar"><button class="btn btn-p" onclick="toast(\'导出（演示）\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(131,15,1)+'</div>';
+});
+
+/* ---------- 视图24：子账户管理 ---------- */
+regView('#/tlock/sub-account',['通用设置','子账户管理'],function(){
+  var mask='<span style="display:inline-block;width:32px;height:13px;background:#e3e8ee;border-radius:2px;vertical-align:-2px"></span>';
+  var rows=[
+    ['zx','管理员','zx','--','25','--'],
+    ['sinosteel','管理员','zx','--','39','--'],
+    ['','管理员','steel','心…','66','--'],
+    ['steel','管理员','steel','--','62','各单位汇总'],
+    ['ong','普通管理员','','重…','3','…重'],
+    ['ji','普通管理员','','几…','1','…几'],
+    ['yuan','普通管理员','','源…','3','…源'],
+    ['gzhong','普通管理员','','重文…','0','…重'],
+    ['gyuan','普通管理员','','院-丁…','9','…'],
+    ['tongky','普通管理员','','山东矿业…','0','…矿业'],
+    ['uan','普通管理员','','物业-周孟…','0','…'],
+    ['uan','普通管理员','','洛耐院-郭…','5','…院'],
+    ['uan','普通管理员','','石家庄院-刘…','4','…庄院'],
+    ['','普通管理员','','制品院-郝…','24','…院']
+  ];
+  var cols=[18,12,18,22,14,16];
+  var heads=['账户名称 <span class="sort">◆</span>','账户角色 <span class="sort">▼</span>','上级账户 <span class="sort">◆</span>','归属人 <span class="sort">◆</span>','管理服务器数','备注'];
+  var body=rows.map(function(r){
+    return '<td>'+mask+'…'+r[0]+'</td><td>'+r[1]+'</td><td>'+mask+'…'+r[2]+'</td><td>'+(r[3]?mask+r[3]:'--')+'</td><td class="link" style="font-weight:700" onclick="toast(\'该账户管理的服务器列表（演示）\')">'+r[4]+'</td><td>'+r[5]+'</td>';
+  }).join('</tr>');
+  return '<div class="panel"><div class="toolbar"><button class="btn btn-p" onclick="openSubModal()">新建</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">绑服务器</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">编辑</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">删除</button><button class="btn btn-g" onclick="toast(\'该操作在演示环境暂不可用\')">重置密码</button><button class="btn" onclick="toast(\'导出（演示）\')">导出</button><span class="sp"></span><div class="kw">请输入关键字查询<input placeholder=""></div></div>'
+  +'<div class="tbl-wrap">'+grid(cols,heads,[body])+'</div>'+pager(19,15,1)+'</div>';
+});
+
+/* 弹窗5：新增子账户 */
+function openSubModal(){
+  openModal(mHead('新增子账户')
+  +'<div class="m-body">'
+  +'<div class="frow"><label><span class="req">*</span>账户名称</label><input placeholder="请输入账户名称"><span class="cnt">0/15</span></div>'
+  +'<div class="frow"><label><span class="req">*</span>账户角色</label><select><option>请选择</option><option>管理员</option><option>普通管理员</option></select></div>'
+  +'<div class="frow"><label><span class="req">*</span>上级账户</label><input value="Zg_sinosteel"><span style="flex:none;margin-left:-30px;color:#1296DB;cursor:pointer" onclick="toast(\'选择上级账户（演示）\')"></span></div>'
+  +'<div class="frow"><label>归属人</label><input placeholder="请输入归属人"><span class="cnt">0/100</span></div>'
+  +'<div class="frow"><label><span class="req">*</span>手机号</label><input placeholder="请输入手机号"><label style="width:auto;margin-left:10px"><span class="req">*</span>邮箱</label><input placeholder="请输入邮箱"></div>'
+  +'<div class="frow"><label>备注</label><input placeholder="请输入备注"><span class="cnt">0/100</span></div>'
+  +'</div>'
+  +'<div class="m-foot"><button class="btn btn-p" onclick="closeModal();toast(\'子账户已提交（演示）\')">提交</button><button class="btn" onclick="closeModal()">取消</button></div>');
+}
+
+/* ================= 路由 ================= */
+function render(){
+  disposeCharts();
+  var h=location.hash||'#/tlock/asset-info';
+  var v=VIEWS[h]||VIEWS['#/tlock/asset-info'];
+  /* 展开所属菜单 */
+  MENU.forEach(function(m){
+    if(m.children.some(function(c){return c.h===h;})){openMenus[m.id]=true;}
+  });
+  renderMenu();
+  document.getElementById('crumb').innerHTML='<img src="assets/ys/crumb-tri.png" style="height:22px;width:auto;object-fit:contain;vertical-align:middle;margin-right:2px"><span>网神云锁</span><span class="sep">::</span><span>'+v.crumb[0]+'</span><span class="sep">::</span><span class="cur">'+v.crumb[1]+'</span>';
+  document.getElementById('view').innerHTML=v.render();
+  if(v.mount)v.mount();
+  document.getElementById('view').scrollTop=0;
+}
+window.addEventListener('hashchange',render);
+if(!location.hash){location.hash='#/tlock/asset-info';}
+render();
+</script>
+</body>
+</html>
