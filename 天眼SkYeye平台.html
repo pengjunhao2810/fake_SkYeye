@@ -313,7 +313,7 @@ footer{height:26px;background:#fff;display:flex;align-items:center;justify-conte
 <div id="chat" onclick="toast('客服小助手：演示环境，功能敬请期待')" title="客服">
   <img src="assets/ty/float-service.png" style="width:44px;height:44px;border-radius:50%">
 </div>
-<footer>Copyright © 2005-2022 QIANXIN.COM All Rights Reserved 奇安信</footer>
+<footer>Copyright © 2005-2022 QIANXIN.COM All Rights Reserved 奇安信<span style="display:none">v2-local</span></footer>
 
 <!-- 告警详情弹窗 -->
 <div id="modalMask" onclick="closeDetail()"></div>
@@ -632,7 +632,7 @@ function renderAlertTable(){
     '<td>'+resTag(r[6])+'</td>'+
     '<td>'+lvTag(r[7])+'</td>'+
     '<td>'+r[8]+'</td>'+
-    '<td class="ops"><a onclick="openDetail()">详情</a><a onclick="toast(\'处置（演示）\')">处置</a><a onclick="toast(\'已加白（演示）\')">加白</a><a onclick="toast(\'智能研判（演示）\')">智能研判</a></td>'+
+    '<td class="ops"><a href="javascript:void(0)" onclick="openDetail()">详情</a><a href="javascript:void(0)" onclick="toast(\'处置（演示）\')">处置</a><a href="javascript:void(0)" onclick="toast(\'已加白（演示）\')">加白</a><a href="javascript:void(0)" onclick="toast(\'智能研判（演示）\')">智能研判</a></td>'+
     '</tr>';
   });
   h+='</tbody></table>'+pagerHTML(43,alertState.page,alertState.size,'alertPg');
